@@ -17,7 +17,7 @@ const CHURCH_WEBSITE_URL = 'https://www.gkjslogohimo.web.id/';
 
 // Konfigurasi Firebase Anda (Diperbaiki agar menggunakan API Key yang valid)
 const firebaseConfig = {
-  apiKey: "AIzaSyAqNuViryXML4war1pXTjxm9l6ViQgHB0A",
+  apiKey: "AIzaSyAqNuViryXML4war1pXTjxm9l6VIqGhB0A",
   authDomain: "komda-hub.firebaseapp.com",
   projectId: "komda-hub",
   storageBucket: "komda-hub.firebasestorage.app",
@@ -25,7 +25,6 @@ const firebaseConfig = {
   appId: "1:170131110544:web:4238f2d853b83deae8f615",
   measurementId: "G-Y1WRHPFVFJ"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
