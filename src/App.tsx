@@ -15,9 +15,9 @@ const DISCORD_INVITE_CODE = 'uEac8TZxec';
 const DISCORD_INVITE_URL = `https://discord.gg/${DISCORD_INVITE_CODE}`;
 const CHURCH_WEBSITE_URL = 'https://www.gkjslogohimo.web.id/';
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Konfigurasi Firebase Anda (Diperbaiki agar menggunakan API Key yang valid)
 const firebaseConfig = {
-  apiKey: "AIzaSyAqNuViryXML4war1pXTjxm9l6VIqGhB0A",
+  apiKey: "AIzaSyAqNuViryXML4war1pXTjxm9l6ViQgHB0A",
   authDomain: "komda-hub.firebaseapp.com",
   projectId: "komda-hub",
   storageBucket: "komda-hub.firebasestorage.app",
@@ -29,7 +29,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const appId = "komda-gkj-slogohimo-production";
+const appId = 'komda-hub-main';
+
 type View = 'dashboard' | 'members' | 'finance' | 'inventory_sound' | 'inventory_media' | 'inventory_property' | 'borrowing' | 'calendar' | 'gallery' | 'discord_webhook' | 'chatbot';
 
 interface Member {
@@ -85,14 +86,6 @@ interface EventItem {
   description: string;
   type: 'Service' | 'Meeting' | 'Youth Gathering' | 'Rehearsal';
   location: string;
-}
-
-interface GalleryItem {
-  id: string;
-  title: string;
-  imageUrl: string;
-  category: string;
-  date: string;
 }
 
 const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
@@ -541,6 +534,140 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
     setFormData({ type: 'income', amount: '', description: '', category: 'Persembahan Kasih', date: new Date().toISOString().split('T')[0] });
   };
 
+  const handleExportExcel = () => {
+    // 1. Urutkan dari yang paling lama ke yang terbaru untuk menghitung saldo berlanjut
+    const sortedTransactions = [...transactions].sort((a:any, b:any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    // 2. Kelompokkan transaksi berdasarkan Bulan & Tahun
+    const groupedTransactions = sortedTransactions.reduce((groups: any, transaction: Transaction) => {
+      const dateObj = new Date(transaction.date);
+      const monthYear = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+      if (!groups[monthYear]) {
+        groups[monthYear] = [];
+      }
+      groups[monthYear].push(transaction);
+      return groups;
+    }, {});
+
+    // 3. Buat struktur tabel HTML khas Excel (Buku Kas) dengan Border pada Sel
+    let tableHtml = `
+      <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+        <head>
+          <meta charset="utf-8">
+          <style>
+            table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
+            /* Membuat garis kotak-kotak persis seperti cell Excel */
+            th, td { border: 1px solid #000000; padding: 6px 8px; vertical-align: middle; }
+            th { background-color: #4F46E5; color: white; font-weight: bold; text-align: center; }
+            .title { font-size: 18px; font-weight: bold; margin-bottom: 5px; color: #1E293B; border: none; }
+            .subtitle { font-size: 12px; color: #64748B; margin-bottom: 20px; border: none; }
+            .month-header { background-color: #E2E8F0; font-weight: bold; font-size: 14px; text-align: center; }
+            .subtotal-row { background-color: #F8FAFC; font-weight: bold; font-style: italic; }
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+            .income-text { color: #059669; }
+            .expense-text { color: #E11D48; }
+          </style>
+        </head>
+        <body>
+          <div class="title">BUKU KAS - KOMDA HUB</div>
+          <div class="subtitle">Dicetak pada: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+          <br/>
+          <table>
+            <thead>
+              <tr>
+                <th width="100">Tanggal</th>
+                <th width="250">Keterangan</th>
+                <th width="150">Kategori</th>
+                <th width="130">Pemasukan (Rp)</th>
+                <th width="130">Pengeluaran (Rp)</th>
+                <th width="150">Saldo Akhir (Rp)</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+
+    let runningBalance = 0; // Untuk menghitung saldo yang terus berlanjut
+
+    // 4. Looping setiap kelompok bulan
+    Object.keys(groupedTransactions).forEach((monthYear) => {
+      // Header Pembatas Bulan
+      tableHtml += `
+        <tr>
+          <td colspan="6" class="month-header">PERIODE: ${monthYear.toUpperCase()}</td>
+        </tr>
+      `;
+
+      let monthlyIncome = 0;
+      let monthlyExpense = 0;
+
+      // Looping transaksi di bulan tersebut
+      groupedTransactions[monthYear].forEach((t: Transaction) => {
+        const isIncome = t.type === 'income';
+        
+        // Perhitungan Saldo & Subtotal
+        if (isIncome) {
+          monthlyIncome += t.amount;
+          runningBalance += t.amount;
+        } else {
+          monthlyExpense += t.amount;
+          runningBalance -= t.amount;
+        }
+
+        // Render baris transaksi (Memisahkan kolom Pemasukan & Pengeluaran)
+        tableHtml += `
+          <tr>
+            <td class="text-center">${new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+            <td>${t.description}</td>
+            <td>${t.category || "Umum"}</td>
+            <td class="text-right income-text">${isIncome ? t.amount : '-'}</td>
+            <td class="text-right expense-text">${!isIncome ? t.amount : '-'}</td>
+            <td class="text-right" style="font-weight: bold; background-color: #F8FAFC;">${runningBalance}</td>
+          </tr>
+        `;
+      });
+
+      // Subtotal per bulan
+      tableHtml += `
+        <tr class="subtotal-row">
+          <td colspan="3" class="text-right" style="color: #475569;">Subtotal Transaksi ${monthYear}:</td>
+          <td class="text-right income-text">${monthlyIncome}</td>
+          <td class="text-right expense-text">${monthlyExpense}</td>
+          <td class="text-right" style="background-color: #F1F5F9;"></td>
+        </tr>
+      `;
+    });
+
+    // 5. Tambahkan baris Rekapitulasi Total Keseluruhan (Grand Total)
+    tableHtml += `
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="3" class="text-right" style="background-color: #1E293B; color: white;">TOTAL KESELURUHAN:</th>
+                <th class="text-right" style="background-color: #1E293B; color: #34D399;">Rp ${stats.income.toLocaleString('id-ID')}</th>
+                <th class="text-right" style="background-color: #1E293B; color: #F87171;">Rp ${stats.expense.toLocaleString('id-ID')}</th>
+                <th class="text-right" style="background-color: #4338CA; color: white; font-size: 15px;">Rp ${stats.balance.toLocaleString('id-ID')}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </body>
+      </html>
+    `;
+
+    // 6. Buat dan unduh file
+    const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Buku_Kas_KOMDA_${new Date().toISOString().split('T')[0]}.xls`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -550,9 +677,14 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
           </h2>
           <p className="text-slate-400 text-sm mt-1">Pencatatan uang kas masuk, operasional pelayanan, dan pengeluaran peralatan.</p>
         </div>
-        <Button variant="emerald" onClick={() => setIsAdding(!isAdding)}>
-          <Plus className="w-4 h-4"/> Catat Transaksi
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={handleExportExcel}>
+            <FileText className="w-4 h-4" /> Export Excel
+          </Button>
+          <Button variant="emerald" onClick={() => setIsAdding(!isAdding)}>
+            <Plus className="w-4 h-4"/> Catat Transaksi
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -999,8 +1131,9 @@ const ChatbotView = () => {
     setIsLoading(true);
 
     try {
-      const apiKey = ""; // Dikosongkan agar aman
-const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
+      // Use the injected Gemini API via Canvas fetch pattern
+      const apiKey = ""; // Leave empty for Canvas injection
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
       
       const payload = {
         contents: [
@@ -1130,7 +1263,10 @@ export default function App() {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // Menggunakan mekanisme login dari komda_hub (1).tsx
+        // @ts-ignore
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          // @ts-ignore
           await signInWithCustomToken(auth, __initial_auth_token);
         } else {
           await signInAnonymously(auth);
@@ -1216,8 +1352,8 @@ export default function App() {
 
   // Derived Stats
   const dashboardStats = useMemo(() => {
-    const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-    const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount || 0), 0);
     return {
       members: members.length,
       balance: income - expense,
