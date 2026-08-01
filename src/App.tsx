@@ -1000,7 +1000,7 @@ const ChatbotView = () => {
 
     try {
       // Use the injected Gemini API via Canvas fetch pattern
-      const apiKey = ""; // Leave empty for Canvas injection
+      const apiKey = "AQ.Ab8RN6KyFZXH4vSGgIAA1tXz2ptRqGfh8SjADnP7sUi-wPZ84A"; // Leave empty for Canvas injection
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
       
       const payload = {
