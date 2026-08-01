@@ -577,7 +577,6 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
               <tr>
                 <th width="100">Tanggal</th>
                 <th width="250">Keterangan</th>
-                <th width="150">Kategori</th>
                 <th width="130">Pemasukan (Rp)</th>
                 <th width="130">Pengeluaran (Rp)</th>
                 <th width="150">Saldo Akhir (Rp)</th>
