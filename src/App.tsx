@@ -999,9 +999,8 @@ const ChatbotView = () => {
     setIsLoading(true);
 
     try {
-      // Use the injected Gemini API via Canvas fetch pattern
-      const apiKey = "AQ.Ab8RN6KyFZXH4vSGgIAA1tXz2ptRqGfh8SjADnP7sUi-wPZ84A"; // Leave empty for Canvas injection
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      const apiKey = ""; // Dikosongkan agar aman
+const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
       
       const payload = {
         contents: [
