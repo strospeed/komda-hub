@@ -15,8 +15,9 @@ const DISCORD_INVITE_CODE = 'uEac8TZxec';
 const DISCORD_INVITE_URL = `https://discord.gg/${DISCORD_INVITE_CODE}`;
 const CHURCH_WEBSITE_URL = 'https://www.gkjslogohimo.web.id/';
 
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyAqNuViryXML4war1pXTjxm9l6ViQgHB0A",
+  apiKey: "AIzaSyAqNuViryXML4war1pXTjxm9l6VIqGhB0A",
   authDomain: "komda-hub.firebaseapp.com",
   projectId: "komda-hub",
   storageBucket: "komda-hub.firebasestorage.app",
