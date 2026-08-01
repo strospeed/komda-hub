@@ -534,138 +534,71 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
   };
 
   const handleExportExcel = () => {
-    // 1. Urutkan dari yang paling lama ke yang terbaru untuk menghitung saldo berlanjut
-    const sortedTransactions = [...transactions].sort((a:any, b:any) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    // 2. Kelompokkan transaksi berdasarkan Bulan & Tahun
-    const groupedTransactions = sortedTransactions.reduce((groups: any, transaction: Transaction) => {
-      const dateObj = new Date(transaction.date);
-      const monthYear = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-      if (!groups[monthYear]) {
-        groups[monthYear] = [];
-      }
-      groups[monthYear].push(transaction);
-      return groups;
-    }, {});
-
-    // 3. Buat struktur tabel HTML khas Excel (Buku Kas) dengan Border pada Sel
-    let tableHtml = `
-      <html xmlns:x="urn:schemas-microsoft-com:office:excel">
-        <head>
-          <meta charset="utf-8">
-          <style>
-            table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
-            /* Membuat garis kotak-kotak persis seperti cell Excel */
-            th, td { border: 1px solid #000000; padding: 6px 8px; vertical-align: middle; }
-            th { background-color: #4F46E5; color: white; font-weight: bold; text-align: center; }
-            .title { font-size: 18px; font-weight: bold; margin-bottom: 5px; color: #1E293B; border: none; }
-            .subtitle { font-size: 12px; color: #64748B; margin-bottom: 20px; border: none; }
-            .month-header { background-color: #E2E8F0; font-weight: bold; font-size: 14px; text-align: center; }
-            .subtotal-row { background-color: #F8FAFC; font-weight: bold; font-style: italic; }
-            .text-right { text-align: right; }
-            .text-center { text-align: center; }
-            .income-text { color: #059669; }
-            .expense-text { color: #E11D48; }
-          </style>
-        </head>
-        <body>
-          <div class="title">BUKU KAS - KOMDA HUB</div>
-          <div class="subtitle">Dicetak pada: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-          <br/>
-          <table>
-            <thead>
-              <tr>
-                <th width="100">Tanggal</th>
-                <th width="250">Keterangan</th>
-                <th width="130">Pemasukan (Rp)</th>
-                <th width="130">Pengeluaran (Rp)</th>
-                <th width="150">Saldo Akhir (Rp)</th>
-              </tr>
-            </thead>
-            <tbody>
+    let excelHTML = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="UTF-8"></head>
+      <body>
+        <table border="1">
+          <tr><td colspan="5" style="font-size: 16px; font-weight: bold; text-align: center;">BUKU KAS - KOMDA HUB</td></tr>
+          <tr><td colspan="5" style="font-size: 11px; text-align: center;">Dicetak pada: ${new Date().toLocaleDateString('id-ID', { dateStyle: 'full' })}</td></tr>
+          <tr><td colspan="5"></td></tr>
+          
+          <tr style="background-color: #4338ca; color: white; font-weight: bold; text-align: center;">
+            <th style="padding: 6px; border: 1px solid #000;">Tanggal</th>
+            <th style="padding: 6px; border: 1px solid #000;">Keterangan</th>
+            <th style="padding: 6px; border: 1px solid #000;">Pemasukan (Rp)</th>
+            <th style="padding: 6px; border: 1px solid #000;">Pengeluaran (Rp)</th>
+            <th style="padding: 6px; border: 1px solid #000;">Saldo Akhir (Rp)</th>
+          </tr>
     `;
 
-    let runningBalance = 0; // Untuk menghitung saldo yang terus berlanjut
+    // Kelompokkan dan urutkan transaksi
+    const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    let runningBalance = 0;
 
-    // 4. Looping setiap kelompok bulan
-    Object.keys(groupedTransactions).forEach((monthYear) => {
-      // Header Pembatas Bulan
-      tableHtml += `
+    sortedTransactions.forEach((t: any) => {
+      const amount = Number(t.amount) || 0;
+      if (t.type === 'income') {
+        runningBalance += amount;
+      } else {
+        runningBalance -= amount;
+      }
+
+      excelHTML += `
         <tr>
-          <td colspan="6" class="month-header">PERIODE: ${monthYear.toUpperCase()}</td>
-        </tr>
-      `;
-
-      let monthlyIncome = 0;
-      let monthlyExpense = 0;
-
-      // Looping transaksi di bulan tersebut
-      groupedTransactions[monthYear].forEach((t: Transaction) => {
-        const isIncome = t.type === 'income';
-        
-        // Perhitungan Saldo & Subtotal
-        if (isIncome) {
-          monthlyIncome += t.amount;
-          runningBalance += t.amount;
-        } else {
-          monthlyExpense += t.amount;
-          runningBalance -= t.amount;
-        }
-
-        // Render baris transaksi (Memisahkan kolom Pemasukan & Pengeluaran)
-        tableHtml += `
-          <tr>
-            <td class="text-center">${new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-            <td>${t.description}</td>
-            <td>${t.category || "Umum"}</td>
-            <td class="text-right income-text">${isIncome ? t.amount : '-'}</td>
-            <td class="text-right expense-text">${!isIncome ? t.amount : '-'}</td>
-            <td class="text-right" style="font-weight: bold; background-color: #F8FAFC;">${runningBalance}</td>
-          </tr>
-        `;
-      });
-
-      // Subtotal per bulan
-      tableHtml += `
-        <tr class="subtotal-row">
-          <td colspan="3" class="text-right" style="color: #475569;">Subtotal Transaksi ${monthYear}:</td>
-          <td class="text-right income-text">${monthlyIncome}</td>
-          <td class="text-right expense-text">${monthlyExpense}</td>
-          <td class="text-right" style="background-color: #F1F5F9;"></td>
+          <td style="border: 1px solid #000; text-align: center; mso-number-format:'\@';">${t.date}</td>
+          <td style="border: 1px solid #000;">${t.description}</td>
+          <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${t.type === 'income' ? amount : '-'}</td>
+          <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${t.type === 'expense' ? amount : '-'}</td>
+          <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${runningBalance}</td>
         </tr>
       `;
     });
 
-    // 5. Tambahkan baris Rekapitulasi Total Keseluruhan (Grand Total)
-    tableHtml += `
-            </tbody>
-            <tfoot>
-              <tr>
-                <th colspan="3" class="text-right" style="background-color: #1E293B; color: white;">TOTAL KESELURUHAN:</th>
-                <th class="text-right" style="background-color: #1E293B; color: #34D399;">Rp ${stats.income.toLocaleString('id-ID')}</th>
-                <th class="text-right" style="background-color: #1E293B; color: #F87171;">Rp ${stats.expense.toLocaleString('id-ID')}</th>
-                <th class="text-right" style="background-color: #4338CA; color: white; font-size: 15px;">Rp ${stats.balance.toLocaleString('id-ID')}</th>
-              </tr>
-            </tfoot>
-          </table>
-        </body>
+    const totalIncome = sortedTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const totalExpense = sortedTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+    excelHTML += `
+          <tr style="background-color: #1e293b; color: white; font-weight: bold;">
+            <td colspan="2" style="border: 1px solid #000; text-align: right;">TOTAL KESELURUHAN:</td>
+            <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${totalIncome}</td>
+            <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${totalExpense}</td>
+            <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${runningBalance}</td>
+          </tr>
+        </table>
+      </body>
       </html>
     `;
 
-    // 6. Buat dan unduh file
-    const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' });
-    const link = document.createElement("a");
+    const blob = new Blob([excelHTML], { type: 'application/vnd.ms-excel' });
     const url = URL.createObjectURL(blob);
-    
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Buku_Kas_KOMDA_${new Date().toISOString().split('T')[0]}.xls`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Buku_Kas_KOMDA_${new Date().toISOString().split('T')[0]}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
-
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
