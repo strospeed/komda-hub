@@ -29,7 +29,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const appId = "komda-hub-main"; // <- mungkin masih dinamis
+const appId = "komda-gkj-slogohimo-production";
 type View = 'dashboard' | 'members' | 'finance' | 'inventory_sound' | 'inventory_media' | 'inventory_property' | 'borrowing' | 'calendar' | 'gallery' | 'discord_webhook' | 'chatbot';
 
 interface Member {
