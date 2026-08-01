@@ -16,15 +16,11 @@ const DISCORD_INVITE_URL = `https://discord.gg/${DISCORD_INVITE_CODE}`;
 const CHURCH_WEBSITE_URL = 'https://www.gkjslogohimo.web.id/';
 
 // Konfigurasi Firebase Anda
-const firebaseConfig = {
-  apiKey: "AIzaSyAqNuViryXML4war1pXTjxm9l6ViQgHB0A",
-  authDomain: "komda-hub.firebaseapp.com",
-  projectId: "komda-hub",
-  storageBucket: "komda-hub.firebasestorage.app",
-  messagingSenderId: "170131110544",
-  appId: "1:170131110544:web:4238f2d853b83deae8f615",
-  measurementId: "G-Y1WRHPFVFJ"
-};
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'komda-hub-default';
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
