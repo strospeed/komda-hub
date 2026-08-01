@@ -15,7 +15,6 @@ const DISCORD_INVITE_CODE = 'uEac8TZxec';
 const DISCORD_INVITE_URL = `https://discord.gg/${DISCORD_INVITE_CODE}`;
 const CHURCH_WEBSITE_URL = 'https://www.gkjslogohimo.web.id/';
 
-// Konfigurasi Firebase Anda
 const firebaseConfig = {
   apiKey: "AIzaSyAqNuViryXML4war1pXTjxm9l6ViQgHB0A",
   authDomain: "komda-hub.firebaseapp.com",
