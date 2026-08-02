@@ -24,6 +24,7 @@ import {
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
 export const CHURCH_WEBSITE_URL = 'https://gkjslogohimo.web.id/';
+export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
 
@@ -565,7 +566,6 @@ const CalendarView = ({ events, onAdd }: any) => {
     setFormData({ title: '', date: '', time: '18:00 WIB', location: 'Gereja', type: 'Service', description: '' }); 
   };
 
-  // Fungsi untuk membandingkan apakah tanggal acara sudah lewat dari hari ini
   const isEventPast = (eventDateStr: string) => {
     if (!eventDateStr) return false;
     const today = new Date();
@@ -622,15 +622,68 @@ const CalendarView = ({ events, onAdd }: any) => {
 };
 
 const DiscordWebhookView = () => {
-  const [webhookUrl, setWebhookUrl] = useState(''); const [message, setMessage] = useState('');
+  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<{ type: 'success' | 'error' | null; text: string }>({ type: null, text: '' });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+
+    setIsLoading(true);
+    setStatus({ type: null, text: '' });
+
+    try {
+      const response = await fetch(PERMANENT_DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: message })
+      });
+
+      if (response.ok || response.status === 204) {
+        setStatus({ type: 'success', text: 'Pesan berhasil dikirim ke Discord!' });
+        setMessage('');
+      } else {
+        setStatus({ type: 'error', text: 'Gagal mengirim pesan ke Discord. Periksa kembali webhook.' });
+      }
+    } catch (err) {
+      setStatus({ type: 'error', text: 'Terjadi kesalahan jaringan saat mengirim pesan.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-3xl mx-auto animate-in fade-in duration-300">
-      <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><MessageSquare className="w-8 h-8 text-[#5865F2]" /> Discord Broadcast</h2>
+      <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
+        <MessageSquare className="w-8 h-8 text-[#5865F2]" /> Discord Broadcast
+      </h2>
+      
       <Card className="border-[#5865F2]/40">
-        <form className="space-y-4">
-          <Input label="URL Webhook" value={webhookUrl} onChange={(e:any) => setWebhookUrl(e.target.value)} />
-          <Textarea label="Pesan" rows={4} value={message} onChange={(e:any) => setMessage(e.target.value)} />
-          <Button variant="discord" type="button" className="w-full"><Send className="w-4 h-4" /> Kirim</Button>
+        <form onSubmit={handleSend} className="space-y-4">
+          <div className="bg-slate-100 dark:bg-slate-950 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+            <span className="text-slate-500 font-semibold">Webhook Tujuan:</span>
+            <span className="font-mono text-indigo-600 dark:text-indigo-400 truncate max-w-[280px] sm:max-w-md">Kanal Resmi KOMDA</span>
+          </div>
+
+          <Textarea 
+            label="Pesan Broadcast" 
+            rows={5} 
+            value={message} 
+            onChange={(e:any) => setMessage(e.target.value)} 
+            placeholder="Tulis pengumuman atau pesan untuk dikirim ke Discord..." 
+            required 
+          />
+
+          {status.type && (
+            <div className={`p-3 rounded-lg text-xs font-semibold ${status.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
+              {status.text}
+            </div>
+          )}
+
+          <Button variant="discord" type="submit" className="w-full" disabled={isLoading}>
+            <Send className="w-4 h-4" /> {isLoading ? 'Mengirim...' : 'Kirim Pesan ke Discord'}
+          </Button>
         </form>
       </Card>
     </div>
