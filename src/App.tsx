@@ -19,7 +19,7 @@ import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
   FileText, LayoutDashboard, Plus, Trash2, CheckCircle, XCircle,
   Menu, X, ArrowRightLeft, Trophy, MessageSquare, Sparkles, Send,
-  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Info, ChevronDown, ExternalLink, Mail, PieChart, Printer
+  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Info, ChevronDown, ExternalLink, Mail, PieChart, Printer, Image as ImageIcon
 } from 'lucide-react';
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
@@ -49,7 +49,7 @@ const appId = 'komda-hub-main';
 
 export type View = 'dashboard' | 'members' | 'finance' | 'inventory_sound' | 'inventory_media' | 'inventory_property' | 'borrowing' | 'calendar' | 'discord_webhook' | 'songs' | 'rota' | 'prayers' | 'tasks';
 
-interface Member { id: string; name: string; role: string; division: string; contact: string; joinDate: string; xp: number; qrId?: string; }
+interface Member { id: string; name: string; role: string; division: string; contact: string; joinDate: string; xp: number; qrId?: string; photoUrl?: string; }
 export interface Transaction { id: string; type: 'income' | 'expense'; amount: number; description: string; date: string; category: string; }
 type InventoryCategory = 'Sound System' | 'Multimedia' | 'Properti';
 interface InventoryItem { id: string; name: string; category: InventoryCategory; condition: 'Good' | 'Needs Repair' | 'Broken'; quantity: number; location: string; qrCodeId?: string; }
@@ -334,7 +334,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
 
 const MembersView = ({ members, onAdd, onDelete, onUpdateXP, selectedQR, setSelectedQR }: any) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
+  const [formData, setFormData] = useState({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50, photoUrl: '' });
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
 
@@ -370,12 +370,23 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, selectedQR, setSele
     }
   }, [isScanning, members, onUpdateXP]);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, photoUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const qrId = `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`;
     onAdd({ ...formData, joinDate: new Date().toISOString(), xp: Number(formData.xp) || 0, qrId });
     setIsAdding(false);
-    setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
+    setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50, photoUrl: '' });
   };
 
   const handleDownloadQR = (name: string, qrId: string) => {
@@ -426,12 +437,24 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, selectedQR, setSele
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border border-slate-200 dark:border-slate-800">
             <button onClick={() => setSelectedQR(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">KOMDA ID</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedQR.division} Division</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-4">{selectedQR.division} Division</p>
+            
+            {/* Foto Profil di Kartu ID */}
+            <div className="mb-4 flex justify-center">
+              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-indigo-500 shadow-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                {selectedQR.photoUrl ? (
+                  <img src={selectedQR.photoUrl} alt={selectedQR.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl font-bold text-indigo-600 uppercase">{selectedQR.name.substring(0, 2)}</span>
+                )}
+              </div>
+            </div>
+
             <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/#member=${selectedQR.qrId || 'MEMBER-DEFAULT'}`)}`} alt="QR" className="w-48 h-48 object-contain" />
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/#member=${selectedQR.qrId || 'MEMBER-DEFAULT'}`)}`} alt="QR" className="w-44 h-44 object-contain" />
             </div>
             <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedQR.name}</h4>
-            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedQR.qrId || 'MEMBER-XXXXXX'}</p>
+            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-1 font-bold tracking-widest">{selectedQR.qrId || 'MEMBER-XXXXXX'}</p>
             <div className="mt-6 flex flex-col gap-2">
               <Button onClick={() => handleDownloadQR(selectedQR.name, selectedQR.qrId || 'MEMBER')} variant="secondary" className="w-full">
                 <Download className="w-4 h-4" /> Download QR Code
@@ -446,13 +469,36 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, selectedQR, setSele
 
       {isAdding && (
         <Card className="border-indigo-500/50">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Nama Lengkap" required value={formData.name} onChange={(e:any) => setFormData({...formData, name: e.target.value})} placeholder="Contoh: Daniel Wibowo" />
-            <Select label="Jabatan/Role" value={formData.role} onChange={(e:any) => setFormData({...formData, role: e.target.value})} options={[{value:'Anggota',label:'Anggota'},{value:'Pengurus',label:'Pengurus'},{value:'PJ Sound',label:'PJ Sound System'},{value:'PJ Media',label:'PJ Multimedia'},{value:'Bendahara',label:'Bendahara'},{value:'Ketua',label:'Ketua / Pembina'},{value:'Super Admin',label:'Super Admin'}]} />
-            <Input label="Divisi Pelayanan" value={formData.division} onChange={(e:any) => setFormData({...formData, division: e.target.value})} placeholder="Puji-Pujian / Sound / Media" />
-            <Input label="Kontak (WA/Discord)" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} placeholder="@username atau 0812..." />
-            <Input label="XP Poin" type="number" min="0" value={formData.xp} onChange={(e:any) => setFormData({...formData, xp: e.target.value})} />
-            <div className="md:col-span-2 flex justify-end gap-2 mt-2">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input label="Nama Lengkap" required value={formData.name} onChange={(e:any) => setFormData({...formData, name: e.target.value})} placeholder="Contoh: Daniel Wibowo" />
+              <Select label="Jabatan/Role" value={formData.role} onChange={(e:any) => setFormData({...formData, role: e.target.value})} options={[{value:'Anggota',label:'Anggota'},{value:'Pengurus',label:'Pengurus'},{value:'PJ Sound',label:'PJ Sound System'},{value:'PJ Media',label:'PJ Multimedia'},{value:'Bendahara',label:'Bendahara'},{value:'Ketua',label:'Ketua / Pembina'},{value:'Super Admin',label:'Super Admin'}]} />
+              <Input label="Divisi Pelayanan" value={formData.division} onChange={(e:any) => setFormData({...formData, division: e.target.value})} placeholder="Puji-Pujian / Sound / Media" />
+              <Input label="Kontak (WA/Discord)" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} placeholder="@username atau 0812..." />
+              <Input label="XP Poin" type="number" min="0" value={formData.xp} onChange={(e:any) => setFormData({...formData, xp: e.target.value})} />
+              
+              {/* Opsi Upload Foto Profil */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Foto Profil (File / Galeri / Kamera HP)</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                    {formData.photoUrl ? (
+                      <img src={formData.photoUrl} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="w-5 h-5 text-slate-400" />
+                    )}
+                  </div>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageUpload}
+                    className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-500/10 dark:file:text-indigo-400 hover:file:bg-indigo-100 transition-all cursor-pointer" 
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
               <Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button>
               <Button type="submit">Simpan Anggota</Button>
             </div>
@@ -486,8 +532,12 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, selectedQR, setSele
                     </td>
                     <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400 uppercase">
-                          {member.name.substring(0, 2)}
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400 uppercase flex-shrink-0">
+                          {member.photoUrl ? (
+                            <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" />
+                          ) : (
+                            member.name.substring(0, 2)
+                          )}
                         </div>
                         <div>
                           <div>{member.name}</div>
