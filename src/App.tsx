@@ -19,12 +19,17 @@ import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
   FileText, LayoutDashboard, Plus, Trash2, CheckCircle, XCircle,
   Menu, X, ArrowRightLeft, Trophy, MessageSquare, Sparkles, Send,
-  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Info, ChevronDown, ExternalLink, Mail, PieChart
+  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Info, ChevronDown, ExternalLink, Mail, PieChart,
+  Facebook, Instagram, Youtube, Video
 } from 'lucide-react';
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
 export const CHURCH_WEBSITE_URL = 'https://gkjslogohimo.web.id/';
 export const CHURCH_EMAIL = 'gkj.slogohimo.wng@gmail.com';
+export const CHURCH_FB_URL = 'https://www.facebook.com/gkj.slogohimo.7#';
+export const CHURCH_IG_URL = 'https://www.instagram.com/komdagkjslogohimo/?hl=id';
+export const CHURCH_TIKTOK_URL = 'https://www.tiktok.com/@komdagkjslogohimo';
+export const CHURCH_YT_URL = 'https://www.youtube.com/@GKJSLOGOHIMO';
 export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
@@ -195,60 +200,132 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
         </div>
       </Card>
 
-      {/* Quick Links Section */}
+      {/* Quick Links & Social Media Section */}
       <div className="pt-2">
-        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Tautan Resmi & Komunitas</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Tautan Resmi & Media Sosial Gereja</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <a 
             href={CHURCH_WEBSITE_URL} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300"
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-lg group-hover:scale-110 transition-transform">
+            <div className="flex items-center gap-3 truncate">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold group-hover:scale-110 transition-transform flex-shrink-0">
                 🌐
               </div>
               <div className="truncate">
-                <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">Website Resmi</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">gkjslogohimo.web.id</p>
+                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors truncate">Website Resmi</h4>
+                <p className="text-[11px] text-slate-500 truncate">gkjslogohimo.web.id</p>
               </div>
             </div>
-            <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors flex-shrink-0 ml-2" />
+            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors flex-shrink-0 ml-2" />
           </a>
 
           <a 
             href={`mailto:${CHURCH_EMAIL}`}
-            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between hover:border-emerald-500/50 hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300"
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-emerald-500/50 hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-lg group-hover:scale-110 transition-transform">
+            <div className="flex items-center gap-3 truncate">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold group-hover:scale-110 transition-transform flex-shrink-0">
                 ✉️
               </div>
               <div className="truncate">
-                <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">Email Resmi</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{CHURCH_EMAIL}</p>
+                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors truncate">Email Resmi</h4>
+                <p className="text-[11px] text-slate-500 truncate">{CHURCH_EMAIL}</p>
               </div>
             </div>
-            <Mail className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors flex-shrink-0 ml-2" />
+            <Mail className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors flex-shrink-0 ml-2" />
+          </a>
+
+          <a 
+            href={CHURCH_IG_URL} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-pink-500/50 hover:shadow-pink-500/10 hover:-translate-y-1 transition-all duration-300"
+          >
+            <div className="flex items-center gap-3 truncate">
+              <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-500/10 border border-pink-100 dark:border-pink-500/20 flex items-center justify-center text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform flex-shrink-0">
+                <Instagram className="w-5 h-5" />
+              </div>
+              <div className="truncate">
+                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-pink-600 transition-colors truncate">Instagram KOMDA</h4>
+                <p className="text-[11px] text-slate-500 truncate">@komdagkjslogohimo</p>
+              </div>
+            </div>
+            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-pink-500 transition-colors flex-shrink-0 ml-2" />
+          </a>
+
+          <a 
+            href={CHURCH_YT_URL} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-rose-500/50 hover:shadow-rose-500/10 hover:-translate-y-1 transition-all duration-300"
+          >
+            <div className="flex items-center gap-3 truncate">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform flex-shrink-0">
+                <Youtube className="w-5 h-5" />
+              </div>
+              <div className="truncate">
+                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors truncate">YouTube Resmi</h4>
+                <p className="text-[11px] text-slate-500 truncate">@GKJSLOGOHIMO</p>
+              </div>
+            </div>
+            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-rose-500 transition-colors flex-shrink-0 ml-2" />
+          </a>
+
+          <a 
+            href={CHURCH_FB_URL} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-blue-500/50 hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-300"
+          >
+            <div className="flex items-center gap-3 truncate">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
+                <Facebook className="w-5 h-5" />
+              </div>
+              <div className="truncate">
+                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors truncate">Facebook Gereja</h4>
+                <p className="text-[11px] text-slate-500 truncate">gkj.slogohimo.7</p>
+              </div>
+            </div>
+            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors flex-shrink-0 ml-2" />
+          </a>
+
+          <a 
+            href={CHURCH_TIKTOK_URL} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-slate-400/50 hover:shadow-slate-500/10 hover:-translate-y-1 transition-all duration-300"
+          >
+            <div className="flex items-center gap-3 truncate">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-900 dark:text-white group-hover:scale-110 transition-transform flex-shrink-0">
+                <Video className="w-5 h-5" />
+              </div>
+              <div className="truncate">
+                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors truncate">TikTok KOMDA</h4>
+                <p className="text-[11px] text-slate-500 truncate">@komdagkjslogohimo</p>
+              </div>
+            </div>
+            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors flex-shrink-0 ml-2" />
           </a>
 
           <a 
             href={DISCORD_INVITE_URL} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between hover:border-[#5865F2]/50 hover:shadow-[#5865F2]/10 hover:-translate-y-1 transition-all duration-300"
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-[#5865F2]/50 hover:shadow-[#5865F2]/10 hover:-translate-y-1 transition-all duration-300 sm:col-span-2"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center text-[#5865F2] font-bold text-lg group-hover:scale-110 transition-transform">
+            <div className="flex items-center gap-3 truncate">
+              <div className="w-10 h-10 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center text-[#5865F2] font-bold group-hover:scale-110 transition-transform flex-shrink-0">
                 💬
               </div>
               <div className="truncate">
-                <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-[#5865F2] transition-colors truncate">Discord KOMDA</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">discord.gg/GwXdWBTapD</p>
+                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-[#5865F2] transition-colors truncate">Komunitas Discord KOMDA</h4>
+                <p className="text-[11px] text-slate-500 truncate">discord.gg/GwXdWBTapD</p>
               </div>
             </div>
-            <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-[#5865F2] transition-colors flex-shrink-0 ml-2" />
+            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-[#5865F2] transition-colors flex-shrink-0 ml-2" />
           </a>
         </div>
       </div>
