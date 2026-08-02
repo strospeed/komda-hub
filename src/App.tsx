@@ -64,7 +64,7 @@ export interface Prayer { id: string; author: string; content: string; date: str
 export interface Task { id: string; title: string; assignee: string; status: 'To Do' | 'In Progress' | 'Done'; event: string; }
 
 const Card = ({ children, className = '', onClick }: any) => (
-  <div onClick={onClick} className={`bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 shadow-xl transition-all duration-300 ${onClick ? 'cursor-pointer hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1' : ''} ${className}`}>
+  <div onClick={onClick} className={`bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl transition-all duration-300 ${onClick ? 'cursor-pointer hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1' : ''} ${className}`}>
     {children}
   </div>
 );
@@ -72,10 +72,10 @@ const Card = ({ children, className = '', onClick }: any) => (
 const Button = ({ children, variant = 'primary', className = '', ...props }: any) => {
   const variants: any = {
     primary: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md',
-    secondary: 'bg-slate-100/90 hover:bg-slate-200 text-slate-700 dark:bg-slate-800/90 dark:hover:bg-slate-700 dark:text-white border border-slate-200 dark:border-slate-700 backdrop-blur-sm',
+    secondary: 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white border border-slate-200 dark:border-slate-700',
     emerald: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md',
     danger: 'bg-rose-600 hover:bg-rose-500 text-white shadow-md',
-    ghost: 'bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/50 text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white',
+    ghost: 'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white',
     discord: 'bg-[#5865F2] hover:bg-[#4752C4] text-white shadow-md'
   };
   return (
@@ -88,14 +88,14 @@ const Button = ({ children, variant = 'primary', className = '', ...props }: any
 const Input = ({ label, ...props }: any) => (
   <div className="mb-4 w-full">
     {label && <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">{label}</label>}
-    <input {...props} className="w-full bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-sm border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
+    <input {...props} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
   </div>
 );
 
 const Select = ({ label, options, ...props }: any) => (
   <div className="mb-4 w-full">
     {label && <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">{label}</label>}
-    <select {...props} className="w-full bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-sm border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm appearance-none">
+    <select {...props} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm appearance-none">
       {options.map((opt: any) => <option key={opt.value} value={opt.value} className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200">{opt.label}</option>)}
     </select>
   </div>
@@ -104,18 +104,18 @@ const Select = ({ label, options, ...props }: any) => (
 const Textarea = ({ label, ...props }: any) => (
   <div className="mb-4 w-full">
     {label && <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">{label}</label>}
-    <textarea {...props} className="w-full bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-sm border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
+    <textarea {...props} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
   </div>
 );
 
 export const Badge = ({ children, color = 'indigo' }: { children: React.ReactNode; color?: string; }) => {
   const styles: Record<string, string> = {
-    indigo: 'bg-indigo-100/90 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30 backdrop-blur-sm',
-    emerald: 'bg-emerald-100/90 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30 backdrop-blur-sm',
-    amber: 'bg-amber-100/90 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30 backdrop-blur-sm',
-    rose: 'bg-rose-100/90 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border-rose-200 dark:border-rose-500/30 backdrop-blur-sm',
-    cyan: 'bg-cyan-100/90 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30 backdrop-blur-sm',
-    slate: 'bg-slate-100/90 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300 border-slate-200 dark:border-slate-500/30 backdrop-blur-sm',
+    indigo: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/20',
+    emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20',
+    amber: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200 dark:border-amber-500/20',
+    rose: 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border-rose-200 dark:border-rose-500/20',
+    cyan: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/20',
+    slate: 'bg-slate-100 text-slate-700 dark:bg-slate-500/10 dark:text-slate-400 border-slate-200 dark:border-slate-500/20',
   };
   return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[color] || styles.indigo}`}>{children}</span>;
 };
@@ -129,7 +129,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3 drop-shadow-sm">
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <LayoutDashboard className="w-8 h-8 text-indigo-500 dark:text-indigo-400" /> Dashboard Utama
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 font-medium">Ringkasan aktivitas dan status pelayanan KOMDA.</p>
@@ -210,7 +210,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             href={CHURCH_WEBSITE_URL} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300"
+            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300"
           >
             <div className="flex items-center gap-3 truncate">
               <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold group-hover:scale-110 transition-transform flex-shrink-0">
@@ -226,7 +226,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
 
           <a 
             href={`mailto:${CHURCH_EMAIL}`}
-            className="group bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-emerald-500/50 hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300"
+            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-emerald-500/50 hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300"
           >
             <div className="flex items-center gap-3 truncate">
               <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold group-hover:scale-110 transition-transform flex-shrink-0">
@@ -244,7 +244,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             href={CHURCH_IG_URL} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-pink-500/50 hover:shadow-pink-500/10 hover:-translate-y-1 transition-all duration-300"
+            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-pink-500/50 hover:shadow-pink-500/10 hover:-translate-y-1 transition-all duration-300"
           >
             <div className="flex items-center gap-3 truncate">
               <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-500/10 border border-pink-100 dark:border-pink-500/20 flex items-center justify-center text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform flex-shrink-0">
@@ -262,7 +262,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             href={CHURCH_YT_URL} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-rose-500/50 hover:shadow-rose-500/10 hover:-translate-y-1 transition-all duration-300"
+            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-rose-500/50 hover:shadow-rose-500/10 hover:-translate-y-1 transition-all duration-300"
           >
             <div className="flex items-center gap-3 truncate">
               <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform flex-shrink-0">
@@ -280,7 +280,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             href={CHURCH_FB_URL} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-blue-500/50 hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-300"
+            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-blue-500/50 hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-300"
           >
             <div className="flex items-center gap-3 truncate">
               <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
@@ -298,7 +298,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             href={CHURCH_TIKTOK_URL} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-slate-400/50 hover:shadow-slate-500/10 hover:-translate-y-1 transition-all duration-300"
+            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-slate-400/50 hover:shadow-slate-500/10 hover:-translate-y-1 transition-all duration-300"
           >
             <div className="flex items-center gap-3 truncate">
               <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-900 dark:text-white group-hover:scale-110 transition-transform flex-shrink-0">
@@ -316,7 +316,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             href={DISCORD_INVITE_URL} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-[#5865F2]/50 hover:shadow-[#5865F2]/10 hover:-translate-y-1 transition-all duration-300 sm:col-span-2"
+            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-[#5865F2]/50 hover:shadow-[#5865F2]/10 hover:-translate-y-1 transition-all duration-300 sm:col-span-2"
           >
             <div className="flex items-center gap-3 truncate">
               <div className="w-10 h-10 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center text-[#5865F2] font-bold group-hover:scale-110 transition-transform flex-shrink-0">
@@ -410,7 +410,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3 drop-shadow-sm">
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <Trophy className="w-8 h-8 text-amber-500 dark:text-amber-400" /> Anggota & Kartu ID
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 font-medium">Manajemen anggota, XP pelayanan, dan ID QR Code (Absensi).</p>
@@ -502,7 +502,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-800/50">
+            <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
               <Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button>
               <Button type="submit">Simpan Anggota</Button>
             </div>
@@ -510,10 +510,10 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
         </Card>
       )}
 
-      <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-700 dark:text-slate-200">
-            <thead className="bg-slate-100/80 dark:bg-slate-950/80 text-slate-600 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+            <thead className="bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="px-6 py-4">Rank</th>
                 <th className="px-6 py-4">Nama & ID</th>
@@ -527,7 +527,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
                 const maxXP = sortedMembers[0]?.xp || 100;
                 const progressPercent = Math.min(100, Math.round(((member.xp || 0) / maxXP) * 100));
                 return (
-                  <tr key={member.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                  <tr key={member.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                     <td className="px-6 py-4">
                       {index === 0 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold">🥇 1</span> : 
                        index === 1 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-400/20 text-slate-600 dark:text-slate-300 font-bold">🥈 2</span> : 
@@ -567,7 +567,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => onDelete(member.id)} className="text-slate-400 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                      <button onClick={() => onDelete(member.id)} className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
@@ -688,7 +688,7 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3 drop-shadow-sm">
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <DollarSign className="w-8 h-8 text-emerald-500 dark:text-emerald-400" /> Keuangan & Kas
           </h2>
         </div>
@@ -725,12 +725,12 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
       <Card className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-700 dark:text-slate-200">
-            <thead className="bg-slate-100/80 dark:bg-slate-950/80 text-slate-600 dark:text-slate-300 font-semibold text-xs border-b border-slate-200 dark:border-slate-800">
+            <thead className="bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-300 font-semibold text-xs border-b border-slate-200 dark:border-slate-800">
               <tr><th className="px-6 py-4">Tanggal</th><th className="px-6 py-4">Keterangan</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4 text-right">Jumlah</th></tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {transactions.sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t: Transaction) => (
-                <tr key={t.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
                   <td className="px-6 py-4 text-xs font-mono">{new Date(t.date).toLocaleDateString('id-ID')}</td>
                   <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{t.description}</td>
                   <td className="px-6 py-4"><Badge color={t.type === 'income' ? 'emerald' : 'rose'}>{t.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}</Badge></td>
@@ -771,7 +771,7 @@ const InventoryView = ({ category, items, onAdd, onDelete, selectedGearQR, setSe
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3 drop-shadow-sm">
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             {category === 'Sound System' && <Speaker className="w-8 h-8 text-amber-500 dark:text-amber-400" />}
             {category === 'Multimedia' && <Camera className="w-8 h-8 text-cyan-500 dark:text-cyan-400" />}
             {category === 'Properti' && <Armchair className="w-8 h-8 text-indigo-500 dark:text-indigo-400" />}
@@ -856,7 +856,7 @@ const BorrowingView = ({ borrowings, inventory, onAdd, onUpdateStatus }: any) =>
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 drop-shadow-sm"><ArrowRightLeft className="w-8 h-8 text-indigo-500 dark:text-indigo-400" /> Sistem Peminjaman</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><ArrowRightLeft className="w-8 h-8 text-indigo-500 dark:text-indigo-400" /> Sistem Peminjaman</h2>
         <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Ajukan</Button>
       </div>
       {isAdding && (
@@ -913,7 +913,7 @@ const CalendarView = ({ events, onAdd }: any) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 drop-shadow-sm">
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
           <CalendarIcon className="w-8 h-8 text-cyan-500 dark:text-cyan-400" /> Agenda Pelayanan
         </h2>
         <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah</Button>
@@ -988,13 +988,13 @@ const DiscordWebhookView = () => {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto animate-in fade-in duration-300">
-      <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 drop-shadow-sm">
+      <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
         <MessageSquare className="w-8 h-8 text-[#5865F2]" /> Discord Broadcast
       </h2>
       
       <Card className="border-[#5865F2]/40">
         <form onSubmit={handleSend} className="space-y-4">
-          <div className="bg-slate-100/90 dark:bg-slate-950/95 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs backdrop-blur-sm">
+          <div className="bg-slate-100 dark:bg-slate-950 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
             <span className="text-slate-500 font-semibold">Webhook Tujuan:</span>
             <span className="font-mono text-indigo-600 dark:text-indigo-400 truncate max-w-[280px] sm:max-w-md">Kanal Resmi KOMDA</span>
           </div>
@@ -1009,7 +1009,7 @@ const DiscordWebhookView = () => {
           />
 
           {status.type && (
-            <div className={`p-3 rounded-lg text-xs font-semibold ${status.type === 'success' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'}`}>
+            <div className={`p-3 rounded-lg text-xs font-semibold ${status.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
               {status.text}
             </div>
           )}
@@ -1059,7 +1059,7 @@ const WorshipSongLibraryView = ({ songs, onAdd, onDelete }: any) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 drop-shadow-sm">
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
           <Music className="w-8 h-8 text-rose-500" /> Database Pujian
         </h2>
         <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Lagu</Button>
@@ -1120,7 +1120,7 @@ const WorshipSongLibraryView = ({ songs, onAdd, onDelete }: any) => {
           <Card key={s.id} onClick={() => { setSelectedSong(s); setTransposeStep(0); }} className="group relative overflow-hidden cursor-pointer hover:border-rose-500/50 transition-all">
             <div className="absolute top-0 right-0 bg-rose-500 text-white font-bold text-xs px-3 py-1 rounded-bl-xl shadow-md">Key: {s.key}</div>
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mt-2 pr-8">{s.title}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 font-mono whitespace-pre-wrap line-clamp-4">{s.lyrics || 'Lirik belum tersedia.'}</p>
+            <p className="text-xs text-slate-500 mt-3 font-mono whitespace-pre-wrap line-clamp-4">{s.lyrics || 'Lirik belum tersedia.'}</p>
             <div className="mt-4 flex justify-between items-center">
               <span className="text-xs font-semibold text-rose-500 flex items-center gap-1">Klik untuk buka lirik & transposer →</span>
               <button onClick={(e) => { e.stopPropagation(); if (confirm('Yakin ingin menghapus lagu ini?')) onDelete(s.id); }} className="text-slate-400 hover:text-rose-500 p-1 rounded transition-colors"><Trash2 className="w-4 h-4"/></button>
@@ -1140,7 +1140,7 @@ const MinistryRotaView = ({ schedules, onAdd }: any) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 drop-shadow-sm"><CalendarDays className="w-8 h-8 text-indigo-500" /> Jadwal Petugas</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><CalendarDays className="w-8 h-8 text-indigo-500" /> Jadwal Petugas</h2>
         <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Buat Rota</Button>
       </div>
       {isAdding && (
@@ -1206,7 +1206,7 @@ const PrayerWallView = ({ prayers, onAdd, onPray }: any) => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-3xl mx-auto">
-      <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 drop-shadow-sm"><Heart className="w-8 h-8 text-rose-500" /> Direktori Doa</h2>
+      <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><Heart className="w-8 h-8 text-rose-500" /> Direktori Doa</h2>
       <Card className="bg-gradient-to-r from-rose-500/10 to-transparent">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input placeholder="Tuliskan pokok doa Anda..." value={content} onChange={(e:any) => setContent(e.target.value)} required />
@@ -1248,7 +1248,7 @@ const TaskBoardView = ({ tasks, onAdd, onUpdateStatus }: any) => {
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onAdd(formData); setIsAdding(false); };
   
   const renderColumn = (status: string, colorClass: string) => (
-    <div className="bg-slate-100/95 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-4 min-h-[300px] border border-slate-200/50 dark:border-slate-800/50">
+    <div className="bg-slate-100 dark:bg-slate-900/50 rounded-2xl p-4 min-h-[300px]">
       <h3 className={`font-bold text-sm uppercase tracking-widest mb-4 flex items-center gap-2 ${colorClass}`}><div className={`w-2 h-2 rounded-full ${colorClass.split(' ')[0].replace('text', 'bg')}`}></div> {status}</h3>
       <div className="space-y-3">
         {tasks.filter((t: Task) => t.status === status).map((t: Task) => (
@@ -1272,7 +1272,7 @@ const TaskBoardView = ({ tasks, onAdd, onUpdateStatus }: any) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 drop-shadow-sm"><ListTodo className="w-8 h-8 text-emerald-500" /> Papan Tugas</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><ListTodo className="w-8 h-8 text-emerald-500" /> Papan Tugas</h2>
         <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Buat Tugas</Button>
       </div>
       {isAdding && (
@@ -1476,11 +1476,11 @@ export default function App() {
         className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto text-slate-900 dark:text-slate-100 relative bg-cover bg-center bg-fixed"
         style={{
           backgroundImage: isDarkMode 
-            ? `linear-gradient(to bottom, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.94)), url('${DARK_WALLPAPER}')`
-            : `linear-gradient(to bottom, rgba(255, 255, 255, 0.85), rgba(241, 245, 249, 0.92)), url('${LIGHT_WALLPAPER}')`
+            ? `linear-gradient(to bottom, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.92)), url('${DARK_WALLPAPER}')`
+            : `linear-gradient(to bottom, rgba(255, 255, 255, 0.50), rgba(241, 245, 249, 0.65)), url('${LIGHT_WALLPAPER}')`
         }}
       >
-        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between shadow-sm">
+        <header className="bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"><Menu className="w-6 h-6" /></button>
             <button onClick={() => setCurrentView('dashboard')} className="hidden sm:flex items-center gap-2 group transition-all">
