@@ -19,11 +19,12 @@ import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
   FileText, LayoutDashboard, Plus, Trash2, CheckCircle, XCircle,
   Menu, X, ArrowRightLeft, Trophy, MessageSquare, Sparkles, Send,
-  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Info, ChevronDown, ExternalLink
+  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Info, ChevronDown, ExternalLink, Mail, PieChart
 } from 'lucide-react';
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
 export const CHURCH_WEBSITE_URL = 'https://gkjslogohimo.web.id/';
+export const CHURCH_EMAIL = 'gkj.slogohimo.wng@gmail.com';
 export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
@@ -112,90 +113,148 @@ export const Badge = ({ children, color = 'indigo' }: { children: React.ReactNod
   return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[color] || styles.indigo}`}>{children}</span>;
 };
 
-const DashboardView = ({ stats, events, onNavigate }: any) => (
-  <div className="space-y-6 animate-in fade-in duration-300">
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-          <LayoutDashboard className="w-8 h-8 text-indigo-500 dark:text-indigo-400" /> Dashboard Utama
-        </h2>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Ringkasan aktivitas dan status pelayanan KOMDA.</p>
+const DashboardView = ({ stats, events, onNavigate }: any) => {
+  const totalFinancialFlow = stats.income + stats.expense;
+  const incomePercent = totalFinancialFlow > 0 ? Math.round((stats.income / totalFinancialFlow) * 100) : 50;
+  const expensePercent = totalFinancialFlow > 0 ? Math.round((stats.expense / totalFinancialFlow) * 100) : 50;
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+            <LayoutDashboard className="w-8 h-8 text-indigo-500 dark:text-indigo-400" /> Dashboard Utama
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Ringkasan aktivitas dan status pelayanan KOMDA.</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card onClick={() => onNavigate('members')} className="border-t-4 border-t-indigo-500 dark:border-indigo-500/30">
+            <div className="flex items-center gap-3 mb-2">
+              <Users className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Anggota</p>
+            </div>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{stats.members}</p>
+          </Card>
+          <Card onClick={() => onNavigate('finance')} className="border-t-4 border-t-emerald-500 dark:border-emerald-500/30">
+             <div className="flex items-center gap-3 mb-2">
+              <DollarSign className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Saldo Kas</p>
+            </div>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">Rp {stats.balance.toLocaleString('id-ID')}</p>
+          </Card>
+          <Card onClick={() => onNavigate('inventory_sound')} className="border-t-4 border-t-amber-500 dark:border-amber-500/30">
+            <div className="flex items-center gap-3 mb-2">
+              <Speaker className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Inventaris Gear</p>
+            </div>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{stats.inventory}</p>
+          </Card>
+          <Card onClick={() => onNavigate('calendar')} className="border-t-4 border-t-cyan-500 dark:border-cyan-500/30">
+            <div className="flex items-center gap-3 mb-2">
+              <CalendarIcon className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Agenda Pelayanan</p>
+            </div>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{events.length}</p>
+          </Card>
+      </div>
+
+      {/* Financial Diagram / Overview Card */}
+      <Card onClick={() => onNavigate('finance')} className="border-indigo-500/30">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <PieChart className="w-6 h-6 text-indigo-500" />
+            <h3 className="font-bold text-slate-900 dark:text-white text-base">Diagram Arus Keuangan Kas</h3>
+          </div>
+          <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Klik untuk detail →</span>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Pemasukan</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">Rp {stats.income.toLocaleString('id-ID')} ({incomePercent}%)</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div> Pengeluaran</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">Rp {stats.expense.toLocaleString('id-ID')} ({expensePercent}%)</span>
+            </div>
+          </div>
+
+          <div className="md:col-span-2">
+            <div className="w-full bg-slate-100 dark:bg-slate-950 rounded-full h-4 overflow-hidden flex p-0.5 border border-slate-200 dark:border-slate-800">
+              <div className="bg-emerald-500 h-full rounded-l-full transition-all duration-500" style={{ width: `${incomePercent}%` }} title={`Pemasukan: ${incomePercent}%`}></div>
+              <div className="bg-rose-500 h-full rounded-r-full transition-all duration-500" style={{ width: `${expensePercent}%` }} title={`Pengeluaran: ${expensePercent}%`}></div>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-slate-400 mt-2 font-mono">
+              <span>0%</span>
+              <span>Proporsi Arus Kas Masuk vs Keluar</span>
+              <span>100%</span>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Quick Links Section */}
+      <div className="pt-2">
+        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Tautan Resmi & Komunitas</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <a 
+            href={CHURCH_WEBSITE_URL} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-lg group-hover:scale-110 transition-transform">
+                🌐
+              </div>
+              <div className="truncate">
+                <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">Website Resmi</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">gkjslogohimo.web.id</p>
+              </div>
+            </div>
+            <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors flex-shrink-0 ml-2" />
+          </a>
+
+          <a 
+            href={`mailto:${CHURCH_EMAIL}`}
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between hover:border-emerald-500/50 hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-lg group-hover:scale-110 transition-transform">
+                ✉️
+              </div>
+              <div className="truncate">
+                <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">Email Resmi</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{CHURCH_EMAIL}</p>
+              </div>
+            </div>
+            <Mail className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors flex-shrink-0 ml-2" />
+          </a>
+
+          <a 
+            href={DISCORD_INVITE_URL} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between hover:border-[#5865F2]/50 hover:shadow-[#5865F2]/10 hover:-translate-y-1 transition-all duration-300"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center text-[#5865F2] font-bold text-lg group-hover:scale-110 transition-transform">
+                💬
+              </div>
+              <div className="truncate">
+                <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-[#5865F2] transition-colors truncate">Discord KOMDA</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">discord.gg/GwXdWBTapD</p>
+              </div>
+            </div>
+            <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-[#5865F2] transition-colors flex-shrink-0 ml-2" />
+          </a>
+        </div>
       </div>
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card onClick={() => onNavigate('members')} className="border-t-4 border-t-indigo-500 dark:border-indigo-500/30">
-          <div className="flex items-center gap-3 mb-2">
-            <Users className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Anggota</p>
-          </div>
-          <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{stats.members}</p>
-        </Card>
-        <Card onClick={() => onNavigate('finance')} className="border-t-4 border-t-emerald-500 dark:border-emerald-500/30">
-           <div className="flex items-center gap-3 mb-2">
-            <DollarSign className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Saldo Kas</p>
-          </div>
-          <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">Rp {stats.balance.toLocaleString('id-ID')}</p>
-        </Card>
-        <Card onClick={() => onNavigate('inventory_sound')} className="border-t-4 border-t-amber-500 dark:border-amber-500/30">
-          <div className="flex items-center gap-3 mb-2">
-            <Speaker className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Inventaris Gear</p>
-          </div>
-          <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{stats.inventory}</p>
-        </Card>
-        <Card onClick={() => onNavigate('calendar')} className="border-t-4 border-t-cyan-500 dark:border-cyan-500/30">
-          <div className="flex items-center gap-3 mb-2">
-            <CalendarIcon className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Agenda Pelayanan</p>
-          </div>
-          <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{events.length}</p>
-        </Card>
-    </div>
-
-    {/* Quick Links Section */}
-    <div className="pt-2">
-      <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Tautan Resmi & Komunitas</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <a 
-          href={CHURCH_WEBSITE_URL} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-lg group-hover:scale-110 transition-transform">
-              🌐
-            </div>
-            <div>
-              <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Website Resmi GKJ Slogohimo</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">gkjslogohimo.web.id</p>
-            </div>
-          </div>
-          <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
-        </a>
-
-        <a 
-          href={DISCORD_INVITE_URL} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between hover:border-[#5865F2]/50 hover:shadow-[#5865F2]/10 hover:-translate-y-1 transition-all duration-300"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center text-[#5865F2] font-bold text-lg group-hover:scale-110 transition-transform">
-              💬
-            </div>
-            <div>
-              <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-[#5865F2] transition-colors">Discord Komunitas KOMDA</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">discord.gg/GwXdWBTapD</p>
-            </div>
-          </div>
-          <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-[#5865F2] transition-colors" />
-        </a>
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
 const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
   const [isAdding, setIsAdding] = useState(false);
