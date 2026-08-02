@@ -332,11 +332,12 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
   );
 };
 
-const MembersView = ({ members, onAdd, onDelete, onUpdateXP, selectedQR, setSelectedQR }: any) => {
+const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50, photoUrl: '' });
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
+  const [activeQRMember, setActiveQRMember] = useState<Member | null>(null);
 
   useEffect(() => {
     if (!isScanning) return;
@@ -432,34 +433,34 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, selectedQR, setSele
         </div>
       )}
 
-      {selectedQR && (
+      {activeQRMember && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <button onClick={() => setSelectedQR(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
+            <button onClick={() => setActiveQRMember(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">KOMDA ID</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-4">{selectedQR.division} Division</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-4">{activeQRMember.division} Division</p>
             
             {/* Foto Profil di Kartu ID */}
             <div className="mb-4 flex justify-center">
               <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-indigo-500 shadow-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                {selectedQR.photoUrl ? (
-                  <img src={selectedQR.photoUrl} alt={selectedQR.name} className="w-full h-full object-cover" />
+                {activeQRMember.photoUrl ? (
+                  <img src={activeQRMember.photoUrl} alt={activeQRMember.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-xl font-bold text-indigo-600 uppercase">{selectedQR.name.substring(0, 2)}</span>
+                  <span className="text-xl font-bold text-indigo-600 uppercase">{activeQRMember.name.substring(0, 2)}</span>
                 )}
               </div>
             </div>
 
             <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/#member=${selectedQR.qrId || 'MEMBER-DEFAULT'}`)}`} alt="QR" className="w-44 h-44 object-contain" />
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/#member=${activeQRMember.qrId || 'MEMBER-DEFAULT'}`)}`} alt="QR" className="w-44 h-44 object-contain" />
             </div>
-            <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedQR.name}</h4>
-            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-1 font-bold tracking-widest">{selectedQR.qrId || 'MEMBER-XXXXXX'}</p>
+            <h4 className="text-xl font-bold text-slate-900 dark:text-white">{activeQRMember.name}</h4>
+            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-1 font-bold tracking-widest">{activeQRMember.qrId || 'MEMBER-XXXXXX'}</p>
             <div className="mt-6 flex flex-col gap-2">
-              <Button onClick={() => handleDownloadQR(selectedQR.name, selectedQR.qrId || 'MEMBER')} variant="secondary" className="w-full">
+              <Button onClick={() => handleDownloadQR(activeQRMember.name, activeQRMember.qrId || 'MEMBER')} variant="secondary" className="w-full">
                 <Download className="w-4 h-4" /> Download QR Code
               </Button>
-              <Button onClick={() => onUpdateXP(selectedQR.id, (selectedQR.xp || 0) + 10)} variant="emerald" className="w-full">
+              <Button onClick={() => { onUpdateXP(activeQRMember.id, (activeQRMember.xp || 0) + 10); setActiveQRMember(null); }} variant="emerald" className="w-full">
                 <CheckCircle className="w-4 h-4" /> Hadir (+10 XP)
               </Button>
             </div>
@@ -541,7 +542,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, selectedQR, setSele
                         </div>
                         <div>
                           <div>{member.name}</div>
-                          <button onClick={() => setSelectedQR(member)} className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-mono mt-0.5">
+                          <button onClick={() => setActiveQRMember(member)} className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-mono mt-0.5">
                             <QrCode className="w-3 h-3"/> Tampilkan QR ID
                           </button>
                         </div>
