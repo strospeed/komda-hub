@@ -716,7 +716,35 @@ const MinistryRotaView = ({ schedules, onAdd }: any) => {
 
 const PrayerWallView = ({ prayers, onAdd, onPray }: any) => {
   const [content, setContent] = useState('');
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onAdd({ author: 'Anonim / Jemaat', content, date: new Date().toISOString(), prayCount: 0 }); setContent(''); };
+  
+  // Mengambil daftar ID doa yang sudah pernah didukung oleh perangkat ini dari localStorage
+  const [supportedPrayers, setSupportedPrayers] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('komda_supported_prayers');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const handlePrayClick = (prayerId: string, currentCount: number) => {
+    if (supportedPrayers.includes(prayerId)) return; // Mencegah spam klik berulang
+    
+    onPray(prayerId, currentCount);
+    
+    const updated = [...supportedPrayers, prayerId];
+    setSupportedPrayers(updated);
+    try {
+      localStorage.setItem('komda_supported_prayers', JSON.stringify(updated));
+    } catch (e) {}
+  };
+
+  const handleSubmit = (e: React.FormEvent) => { 
+    e.preventDefault(); 
+    onAdd({ author: 'Anonim / Jemaat', content, date: new Date().toISOString(), prayCount: 0 }); 
+    setContent(''); 
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-3xl mx-auto">
       <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><Heart className="w-8 h-8 text-rose-500" /> Direktori Doa</h2>
@@ -727,17 +755,29 @@ const PrayerWallView = ({ prayers, onAdd, onPray }: any) => {
         </form>
       </Card>
       <div className="space-y-4">
-        {prayers.map((p: Prayer) => (
-          <Card key={p.id} className="relative">
-            <p className="text-slate-800 dark:text-slate-200 italic mb-4">"{p.content}"</p>
-            <div className="flex justify-between items-center text-xs text-slate-500">
-              <span>{new Date(p.date).toLocaleDateString()}</span>
-              <button onClick={() => onPray(p.id, p.prayCount)} className="flex items-center gap-1.5 hover:text-rose-500 transition-colors bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full font-bold">
-                <Heart className={`w-4 h-4 ${p.prayCount > 0 ? 'fill-rose-500 text-rose-500' : ''}`} /> Mendukung ({p.prayCount})
-              </button>
-            </div>
-          </Card>
-        ))}
+        {prayers.map((p: Prayer) => {
+          const isSupported = supportedPrayers.includes(p.id);
+          return (
+            <Card key={p.id} className="relative">
+              <p className="text-slate-800 dark:text-slate-200 italic mb-4">"{p.content}"</p>
+              <div className="flex justify-between items-center text-xs text-slate-500">
+                <span>{new Date(p.date).toLocaleDateString()}</span>
+                <button 
+                  onClick={() => handlePrayClick(p.id, p.prayCount)} 
+                  disabled={isSupported}
+                  className={`flex items-center gap-1.5 transition-colors px-3.5 py-1.5 rounded-full font-bold ${
+                    isSupported 
+                      ? 'bg-rose-500/20 text-rose-500 cursor-not-allowed border border-rose-500/30' 
+                      : 'bg-slate-100 dark:bg-slate-800 hover:text-rose-500 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 ${isSupported ? 'fill-rose-500 text-rose-500' : ''}`} /> 
+                  {isSupported ? `Didukung (${p.prayCount})` : `Mendukung (${p.prayCount})`}
+                </button>
+              </div>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
@@ -837,7 +877,6 @@ export default function App() {
   const [prayers, setPrayers] = useState<Prayer[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  // Efek reaktif untuk memasang kelas `dark` pada elemen HTML root dokumen
   useEffect(() => {
     const root = document.documentElement;
     if (isDarkMode) {
