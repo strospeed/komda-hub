@@ -160,6 +160,131 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
   const [selectedQR, setSelectedQR] = useState<Member | null>(null);
+  
+  // State baru untuk mengontrol modal kamera scanner
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<string | null>(null);
+
+  // Efek untuk menjalankan html5-qrcode scanner saat mode scan aktif
+  useEffect(() => {
+    if (!isScanning) return;
+    
+    // Pastikan library sudah dimuat
+    const scannerId = "reader";
+    // @ts-ignore
+    if (window.Html5QrcodeScanner) {
+      // @ts-ignore
+      const scanner = new Html5QrcodeScanner(
+        scannerId,
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        false
+      );
+
+      scanner.render(
+        (decodedText: string) => {
+          setScanResult(decodedText);
+          scanner.clear();
+          setIsScanning(false);
+          
+          // Cari anggota berdasarkan qrId yang berhasil di-scan
+          const foundMember = members.find((m: Member) => m.qrId === decodedText);
+          if (foundMember) {
+            onUpdateXP(foundMember.id, (foundMember.xp || 0) + 10);
+            alert(`Berhasil! Kehadiran ${foundMember.name} dicatat (+10 XP).`);
+          } else {
+            alert(`QR Code terdeteksi: ${decodedText}, tetapi anggota tidak ditemukan di database.`);
+          }
+        },
+        (error: any) => {
+          // Error saat proses scanning (biasanya diabaikan karena scanner terus mencari)
+        }
+      );
+
+      return () => {
+        try {
+          scanner.clear();
+        } catch (e) {
+          console.error(e);
+        }
+      };
+    }
+  }, [isScanning, members, onUpdateXP]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const qrId = `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`;
+    onAdd({ ...formData, joinDate: new Date().toISOString(), xp: Number(formData.xp) || 0, qrId });
+    setIsAdding(false);
+    setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
+  };
+
+  const sortedMembers = useMemo(() => [...members].sort((a, b) => (b.xp || 0) - (a.xp || 0)), [members]);
+  const getRoleColor = (role: string) => role === 'Super Admin' ? 'purple' : role === 'Ketua' || role === 'Pengurus' ? 'indigo' : role === 'Bendahara' ? 'emerald' : role === 'PJ Sound' ? 'amber' : role === 'PJ Media' ? 'cyan' : 'slate';
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+            <Trophy className="w-8 h-8 text-amber-500 dark:text-amber-400" /> Anggota & Kartu ID
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manajemen anggota, XP pelayanan, dan ID QR Code (Absensi).</p>
+        </div>
+        <div className="flex gap-2">
+          {/* Tombol Scan Presensi yang langsung memicu kamera */}
+          <Button variant="secondary" onClick={() => setIsScanning(true)}>
+            <ScanLine className="w-4 h-4" /> Scan Presensi
+          </Button>
+          <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Anggota</Button>
+        </div>
+      </div>
+
+      {/* Modal Kamera Scanner */}
+      {isScanning && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl relative border border-slate-200 dark:border-slate-800">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Arahkan Kamera ke QR Code</h3>
+              <button onClick={() => setIsScanning(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
+            </div>
+            
+            {/* Elemen wadah untuk kamera pembaca QR */}
+            <div id="reader" className="overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-950"></div>
+            
+            <p className="text-xs text-slate-500 text-center mt-4">Sistem akan otomatis mencatat kehadiran dan menambah +10 XP saat QR terbaca.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal QR Code Anggota */}
+      {selectedQR && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border border-slate-200 dark:border-slate-800">
+            <button onClick={() => setSelectedQR(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">KOMDA ID</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedQR.division} Division</p>
+            
+            <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedQR.qrId || 'MEMBER-DEFAULT'}`} 
+                alt="QR Code Anggota" 
+                className="w-48 h-48 object-contain"
+              />
+            </div>
+            
+            <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedQR.name}</h4>
+            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedQR.qrId || 'MEMBER-XXXXXX'}</p>
+            
+            <div className="mt-6 flex justify-center gap-2">
+              <Button onClick={() => onUpdateXP(selectedQR.id, (selectedQR.xp || 0) + 10)} variant="emerald" className="w-full">
+                <CheckCircle className="w-4 h-4" /> Hadir (+10 XP)
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Seterusnya kode tabel anggota seperti biasa... */}
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
