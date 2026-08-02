@@ -1477,7 +1477,7 @@ export default function App() {
         style={{
           backgroundImage: isDarkMode 
             ? `linear-gradient(to bottom, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.92)), url('${DARK_WALLPAPER}')`
-            : `linear-gradient(to bottom, rgba(255, 255, 255, 0.50), rgba(241, 245, 249, 0.65)), url('${LIGHT_WALLPAPER}')`
+            : `linear-gradient(to bottom, rgba(203, 213, 225, 0.78), rgba(148, 163, 184, 0.88)), url('${LIGHT_WALLPAPER}')`
         }}
       >
         <header className="bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between shadow-sm">
