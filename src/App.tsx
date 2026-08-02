@@ -557,13 +557,35 @@ const BorrowingView = ({ borrowings, inventory, onAdd, onUpdateStatus }: any) =>
 const CalendarView = ({ events, onAdd }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ title: '', date: '', time: '18:00 WIB', location: 'Gereja', type: 'Service', description: '' });
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onAdd(formData); setIsAdding(false); };
+  
+  const handleSubmit = (e: React.FormEvent) => { 
+    e.preventDefault(); 
+    onAdd(formData); 
+    setIsAdding(false); 
+    setFormData({ title: '', date: '', time: '18:00 WIB', location: 'Gereja', type: 'Service', description: '' }); 
+  };
+
+  // Fungsi untuk membandingkan apakah tanggal acara sudah lewat dari hari ini
+  const isEventPast = (eventDateStr: string) => {
+    if (!eventDateStr) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const eventDate = new Date(eventDateStr);
+    eventDate.setHours(0, 0, 0, 0);
+
+    return eventDate < today;
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><CalendarIcon className="w-8 h-8 text-cyan-500 dark:text-cyan-400" /> Agenda Pelayanan</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
+          <CalendarIcon className="w-8 h-8 text-cyan-500 dark:text-cyan-400" /> Agenda Pelayanan
+        </h2>
         <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah</Button>
       </div>
+
       {isAdding && (
         <Card className="border-indigo-500/50">
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -575,14 +597,25 @@ const CalendarView = ({ events, onAdd }: any) => {
           </form>
         </Card>
       )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {events.map((e: any) => (
-          <Card key={e.id}>
-            <div className="flex justify-between mb-2"><Badge color="cyan">{e.type}</Badge><span className="font-mono text-xs">{e.date}</span></div>
-            <h3 className="font-bold text-slate-900 dark:text-white">{e.title}</h3>
-            <p className="text-xs text-indigo-500 mt-1">📍 {e.location} • ⏰ {e.time}</p>
-          </Card>
-        ))}
+        {events.map((e: any) => {
+          const past = isEventPast(e.date);
+          return (
+            <Card key={e.id} className={past ? 'opacity-75 border-slate-300 dark:border-slate-800' : ''}>
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-2">
+                  <Badge color={past ? 'slate' : 'cyan'}>{e.type}</Badge>
+                  {past && <Badge color="rose">Selesai</Badge>}
+                </div>
+                <span className="font-mono text-xs text-slate-500">{e.date}</span>
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">{e.title}</h3>
+              <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-2">📍 {e.location} • ⏰ {e.time}</p>
+            </Card>
+          );
+        })}
+        {events.length === 0 && <p className="col-span-full text-slate-500 italic">Belum ada agenda pelayanan tercatat.</p>}
       </div>
     </div>
   );
