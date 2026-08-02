@@ -220,7 +220,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
           setScanResult(decodedText);
           scanner.clear();
           setIsScanning(false);
-          const foundMember = members.find((m: Member) => m.qrId === decodedText);
+          const foundMember = members.find((m: Member) => m.qrId === decodedText || decodedText.includes(m.qrId || ''));
           if (foundMember) {
             onUpdateXP(foundMember.id, (foundMember.xp || 0) + 10);
             alert(`Berhasil! Kehadiran ${foundMember.name} dicatat (+10 XP).`);
@@ -242,6 +242,16 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
     onAdd({ ...formData, joinDate: new Date().toISOString(), xp: Number(formData.xp) || 0, qrId });
     setIsAdding(false);
     setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
+  };
+
+  const handleDownloadQR = (name: string, qrId: string) => {
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/#member=${qrId}`)}`;
+    const link = document.createElement('a');
+    link.href = qrUrl;
+    link.download = `QR-Member-${name.replace(/\s+/g, '_')}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const sortedMembers = useMemo(() => [...members].sort((a, b) => (b.xp || 0) - (a.xp || 0)), [members]);
@@ -284,11 +294,14 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
             <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">KOMDA ID</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedQR.division} Division</p>
             <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedQR.qrId || 'MEMBER-DEFAULT'}`} alt="QR" className="w-48 h-48 object-contain" />
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/#member=${selectedQR.qrId || 'MEMBER-DEFAULT'}`)}`} alt="QR" className="w-48 h-48 object-contain" />
             </div>
             <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedQR.name}</h4>
             <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedQR.qrId || 'MEMBER-XXXXXX'}</p>
-            <div className="mt-6 flex justify-center gap-2">
+            <div className="mt-6 flex flex-col gap-2">
+              <Button onClick={() => handleDownloadQR(selectedQR.name, selectedQR.qrId || 'MEMBER')} variant="secondary" className="w-full">
+                <Download className="w-4 h-4" /> Download QR Code
+              </Button>
               <Button onClick={() => onUpdateXP(selectedQR.id, (selectedQR.xp || 0) + 10)} variant="emerald" className="w-full">
                 <CheckCircle className="w-4 h-4" /> Hadir (+10 XP)
               </Button>
@@ -465,6 +478,16 @@ const InventoryView = ({ category, items, onAdd, onDelete }: any) => {
     setFormData({ name: '', condition: 'Good', quantity: 1, location: 'Ruang Sound/Media' });
   };
 
+  const handleDownloadGearQR = (name: string, qrCodeId: string) => {
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/#gear=${qrCodeId}`)}`;
+    const link = document.createElement('a');
+    link.href = qrUrl;
+    link.download = `QR-Gear-${name.replace(/\s+/g, '_')}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -488,12 +511,15 @@ const InventoryView = ({ category, items, onAdd, onDelete }: any) => {
             <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">GEAR ID</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedGearQR.category}</p>
             <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedGearQR.qrCodeId || 'GEAR-DEFAULT'}`} alt="QR" className="w-48 h-48 object-contain" />
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/#gear=${selectedGearQR.qrCodeId || 'GEAR-DEFAULT'}`)}`} alt="QR" className="w-48 h-48 object-contain" />
             </div>
             <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedGearQR.name}</h4>
             <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedGearQR.qrCodeId || 'GEAR-XXXXXX'}</p>
-            <div className="mt-6">
-              <Button onClick={() => setSelectedGearQR(null)} variant="secondary" className="w-full">Tutup</Button>
+            <div className="mt-6 flex flex-col gap-2">
+              <Button onClick={() => handleDownloadGearQR(selectedGearQR.name, selectedGearQR.qrCodeId || 'GEAR')} variant="secondary" className="w-full">
+                <Download className="w-4 h-4" /> Download QR Code
+              </Button>
+              <Button onClick={() => setSelectedGearQR(null)} variant="ghost" className="w-full">Tutup</Button>
             </div>
           </div>
         </div>
