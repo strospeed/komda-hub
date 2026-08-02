@@ -563,7 +563,7 @@ const DiscordWebhookView = () => {
   );
 };
 
-const WorshipSongLibraryView = ({ songs, onAdd }: any) => {
+const WorshipSongLibraryView = ({ songs, onAdd, onDelete }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [transposeStep, setTransposeStep] = useState(0);
@@ -632,7 +632,10 @@ const WorshipSongLibraryView = ({ songs, onAdd }: any) => {
               </pre>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-between items-center">
+              <Button variant="danger" onClick={() => { if (confirm('Hapus lagu ini dari database?')) { onDelete(selectedSong.id); setSelectedSong(null); setTransposeStep(0); } }}>
+                <Trash2 className="w-4 h-4" /> Hapus Lagu
+              </Button>
               <Button onClick={() => { setSelectedSong(null); setTransposeStep(0); }} variant="secondary">Tutup</Button>
             </div>
           </div>
@@ -658,7 +661,10 @@ const WorshipSongLibraryView = ({ songs, onAdd }: any) => {
             <div className="absolute top-0 right-0 bg-rose-500 text-white font-bold text-xs px-3 py-1 rounded-bl-xl shadow-md">Key: {s.key}</div>
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mt-2 pr-8">{s.title}</h3>
             <p className="text-xs text-slate-500 mt-3 font-mono whitespace-pre-wrap line-clamp-4">{s.lyrics || 'Lirik belum tersedia.'}</p>
-            <div className="mt-4 text-xs font-semibold text-rose-500 flex items-center gap-1">Klik untuk buka lirik & transposer →</div>
+            <div className="mt-4 flex justify-between items-center">
+              <span className="text-xs font-semibold text-rose-500 flex items-center gap-1">Klik untuk buka lirik & transposer →</span>
+              <button onClick={(e) => { e.stopPropagation(); if (confirm('Yakin ingin menghapus lagu ini?')) onDelete(s.id); }} className="text-slate-400 hover:text-rose-500 p-1 rounded transition-colors"><Trash2 className="w-4 h-4"/></button>
+            </div>
           </Card>
         ))}
         {songs.length === 0 && <p className="col-span-full text-slate-500 italic">Belum ada lagu. Tambahkan repertoar pujian pertama!</p>}
@@ -962,7 +968,7 @@ export default function App() {
           {currentView === 'calendar' && <CalendarView events={events} onAdd={(d: any) => handleAddDoc('events', d)} />}
           {currentView === 'discord_webhook' && <DiscordWebhookView />}
           
-          {currentView === 'songs' && <WorshipSongLibraryView songs={songs} onAdd={(d: any) => handleAddDoc('songs', d)} />}
+          {currentView === 'songs' && <WorshipSongLibraryView songs={songs} onAdd={(d: any) => handleAddDoc('songs', d)} onDelete={(id: string) => handleDeleteDoc('songs', id)} />}
           {currentView === 'rota' && <MinistryRotaView schedules={schedules} onAdd={(d: any) => handleAddDoc('schedules', d)} />}
           {currentView === 'prayers' && <PrayerWallView prayers={prayers} onAdd={(d: any) => handleAddDoc('prayers', d)} onPray={(id: string, current: number) => handleUpdateDoc('prayers', id, { prayCount: current + 1 })} />}
           {currentView === 'tasks' && <TaskBoardView tasks={tasks} onAdd={(d: any) => handleAddDoc('tasks', d)} onUpdateStatus={(id: string, s: string) => handleUpdateDoc('tasks', id, { status: s })} />}
