@@ -198,8 +198,12 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedQR.division} Division</p>
             
             <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
-              {/* Dummy Visual QR Representation */}
-              <QrCode className="w-48 h-48 text-slate-900" />
+              {/* QR Code Asli yang bisa di-scan */}
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedQR.qrId || 'MEMBER-DEFAULT'}`} 
+                alt="QR Code Anggota" 
+                className="w-48 h-48 object-contain"
+              />
             </div>
             
             <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedQR.name}</h4>
