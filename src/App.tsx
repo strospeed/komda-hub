@@ -892,11 +892,11 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex transition-colors duration-300">
+    <div className={`min-h-screen font-sans flex transition-colors duration-300 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       {isSidebarOpen && <div className="fixed inset-0 bg-black/70 z-40 lg:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />}
 
-      <aside className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-white/90 dark:bg-slate-900/90 border-r border-slate-200 dark:border-slate-800/80 z-50 backdrop-blur-xl transform transition-transform duration-300 ease-in-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-        <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/60">
+      <aside className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-50 backdrop-blur-xl transform transition-transform duration-300 ease-in-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg bg-white flex items-center justify-center">
               <img src={LOGO_URL} alt="Logo" className="w-full h-full object-cover" />
@@ -937,8 +937,8 @@ export default function App() {
         </nav>
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        <header className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/80 sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between">
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"><Menu className="w-6 h-6" /></button>
             <button onClick={() => setCurrentView('dashboard')} className="hidden sm:flex items-center gap-2 group transition-all">
