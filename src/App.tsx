@@ -566,25 +566,75 @@ const DiscordWebhookView = () => {
 const WorshipSongLibraryView = ({ songs, onAdd }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [transposeStep, setTransposeStep] = useState(0);
   const [formData, setFormData] = useState({ title: '', key: 'C', lyrics: '' });
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onAdd(formData); setIsAdding(false); setFormData({ title: '', key: 'C', lyrics: '' }); };
+
+  const handleSubmit = (e: React.FormEvent) => { 
+    e.preventDefault(); 
+    onAdd(formData); 
+    setIsAdding(false); 
+    setFormData({ title: '', key: 'C', lyrics: '' }); 
+  };
+
+  const transposeChord = (chord: string, semitones: number): string => {
+    const CHORDS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const match = chord.match(/^([A-G][b#]?)(.*)$/);
+    if (!match) return chord;
+    const [, root, modifier] = match;
+    let index = CHORDS.indexOf(root);
+    if (index === -1) return chord;
+    let newIndex = (index + semitones) % 12;
+    if (newIndex < 0) newIndex += 12;
+    return CHORDS[newIndex] + modifier;
+  };
+
+  const getTransformedLyrics = (lyrics: string) => {
+    if (transposeStep === 0) return lyrics;
+    return lyrics.replace(/\[(.*?)\]/g, (match, chordGroup) => {
+      const transposed = chordGroup.split(' ').map((c: string) => transposeChord(c, transposeStep)).join(' ');
+      return `[${transposed}]`;
+    });
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><Music className="w-8 h-8 text-rose-500" /> Database Pujian</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
+          <Music className="w-8 h-8 text-rose-500" /> Database Pujian
+        </h2>
         <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Lagu</Button>
       </div>
 
       {selectedSong && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <button onClick={() => setSelectedSong(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white p-2"><X className="w-6 h-6"/></button>
-            <div className="flex items-center gap-3 mb-4"><Badge color="rose">Key: {selectedSong.key}</Badge></div>
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4">{selectedSong.title}</h3>
-            <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-              <pre className="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{selectedSong.lyrics || 'Tidak ada lirik atau chord yang dicatat.'}</pre>
+            <button onClick={() => { setSelectedSong(null); setTransposeStep(0); }} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white p-2"><X className="w-6 h-6"/></button>
+            
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Badge color="rose">Original Key: {selectedSong.key}</Badge>
+                {transposeStep !== 0 && <Badge color="indigo">Transpose: {transposeStep > 0 ? `+${transposeStep}` : transposeStep}</Badge>}
+              </div>
+
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <span className="text-xs font-bold px-2 text-slate-500">Chord:</span>
+                <button onClick={() => setTransposeStep(prev => prev - 1)} className="px-2.5 py-1 text-xs font-bold bg-white dark:bg-slate-700 rounded-lg shadow hover:bg-indigo-600 hover:text-white transition-colors">-</button>
+                <button onClick={() => setTransposeStep(0)} className="px-2.5 py-1 text-xs font-bold text-slate-600 dark:text-slate-300">Reset</button>
+                <button onClick={() => setTransposeStep(prev => prev + 1)} className="px-2.5 py-1 text-xs font-bold bg-white dark:bg-slate-700 rounded-lg shadow hover:bg-indigo-600 hover:text-white transition-colors">+</button>
+              </div>
             </div>
-            <div className="mt-6 flex justify-end"><Button onClick={() => setSelectedSong(null)} variant="secondary">Tutup</Button></div>
+
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4">{selectedSong.title}</h3>
+            
+            <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+              <pre className="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                {getTransformedLyrics(selectedSong.lyrics || 'Tidak ada lirik atau chord yang dicatat.')}
+              </pre>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => { setSelectedSong(null); setTransposeStep(0); }} variant="secondary">Tutup</Button>
+            </div>
           </div>
         </div>
       )}
@@ -596,18 +646,19 @@ const WorshipSongLibraryView = ({ songs, onAdd }: any) => {
               <Input label="Judul Lagu" required value={formData.title} onChange={(e:any) => setFormData({...formData, title: e.target.value})} className="flex-1" />
               <Input label="Nada Dasar (Key)" required value={formData.key} onChange={(e:any) => setFormData({...formData, key: e.target.value})} className="w-24" />
             </div>
-            <Textarea label="Lirik & Chord" rows={6} value={formData.lyrics} onChange={(e:any) => setFormData({...formData, lyrics: e.target.value})} placeholder="[Intro] C G Am F..." />
+            <Textarea label="Lirik & Chord (Gunakan kurung siku untuk chord, cth: [C] [G])" rows={6} value={formData.lyrics} onChange={(e:any) => setFormData({...formData, lyrics: e.target.value})} placeholder="[C] Betapa [G] besar [Am] kasihMu..." />
             <div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan</Button></div>
           </form>
         </Card>
       )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {songs.map((s: Song) => (
-          <Card key={s.id} onClick={() => setSelectedSong(s)} className="group relative overflow-hidden cursor-pointer hover:border-rose-500/50 transition-all">
+          <Card key={s.id} onClick={() => { setSelectedSong(s); setTransposeStep(0); }} className="group relative overflow-hidden cursor-pointer hover:border-rose-500/50 transition-all">
             <div className="absolute top-0 right-0 bg-rose-500 text-white font-bold text-xs px-3 py-1 rounded-bl-xl shadow-md">Key: {s.key}</div>
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mt-2 pr-8">{s.title}</h3>
             <p className="text-xs text-slate-500 mt-3 font-mono whitespace-pre-wrap line-clamp-4">{s.lyrics || 'Lirik belum tersedia.'}</p>
-            <div className="mt-4 text-xs font-semibold text-rose-500 flex items-center gap-1">Klik untuk buka lirik & chord →</div>
+            <div className="mt-4 text-xs font-semibold text-rose-500 flex items-center gap-1">Klik untuk buka lirik & transposer →</div>
           </Card>
         ))}
         {songs.length === 0 && <p className="col-span-full text-slate-500 italic">Belum ada lagu. Tambahkan repertoar pujian pertama!</p>}
