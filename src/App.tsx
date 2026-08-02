@@ -455,10 +455,12 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
 const InventoryView = ({ category, items, onAdd, onDelete }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ name: '', condition: 'Good', quantity: 1, location: 'Ruang Sound/Media' });
+  const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd({ ...formData, category, quantity: Number(formData.quantity) || 1, qrCodeId: `QR-${category.substring(0,3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}` });
+    const qrCodeId = `QR-${category.substring(0,3).toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`;
+    onAdd({ ...formData, category, quantity: Number(formData.quantity) || 1, qrCodeId });
     setIsAdding(false);
     setFormData({ name: '', condition: 'Good', quantity: 1, location: 'Ruang Sound/Media' });
   };
@@ -478,6 +480,25 @@ const InventoryView = ({ category, items, onAdd, onDelete }: any) => {
           <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Gear</Button>
         </div>
       </div>
+
+      {selectedGearQR && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border border-slate-200 dark:border-slate-800">
+            <button onClick={() => setSelectedGearQR(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">GEAR ID</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedGearQR.category}</p>
+            <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedGearQR.qrCodeId || 'GEAR-DEFAULT'}`} alt="QR" className="w-48 h-48 object-contain" />
+            </div>
+            <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedGearQR.name}</h4>
+            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedGearQR.qrCodeId || 'GEAR-XXXXXX'}</p>
+            <div className="mt-6">
+              <Button onClick={() => setSelectedGearQR(null)} variant="secondary" className="w-full">Tutup</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isAdding && (
         <Card className="border-indigo-500/50">
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -500,7 +521,9 @@ const InventoryView = ({ category, items, onAdd, onDelete }: any) => {
               <div className="flex justify-between"><span>Jumlah:</span><span className="text-slate-900 dark:text-white font-bold">{item.quantity} unit</span></div>
               <div className="flex justify-between"><span>Lokasi:</span><span className="text-slate-700 dark:text-slate-300">{item.location}</span></div>
               <div className="flex justify-between items-center pt-1">
-                <span className="inline-flex items-center gap-1 font-mono text-[10px] text-indigo-600 bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-500/20"><QrCode className="w-3 h-3" /> {item.qrCodeId}</span>
+                <button onClick={() => setSelectedGearQR(item)} className="inline-flex items-center gap-1 font-mono text-[11px] text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors font-semibold">
+                  <QrCode className="w-3.5 h-3.5" /> Tampilkan QR
+                </button>
                 <button onClick={() => onDelete(item.id)} className="text-slate-400 hover:text-rose-500 p-1"><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
