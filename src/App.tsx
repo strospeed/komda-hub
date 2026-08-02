@@ -256,10 +256,9 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
   );
 };
 
-const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
+const MembersView = ({ members, onAdd, onDelete, onUpdateXP, selectedQR, setSelectedQR }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
-  const [selectedQR, setSelectedQR] = useState<Member | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
 
@@ -524,10 +523,9 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
   );
 };
 
-const InventoryView = ({ category, items, onAdd, onDelete }: any) => {
+const InventoryView = ({ category, items, onAdd, onDelete, selectedGearQR, setSelectedGearQR }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ name: '', condition: 'Good', quantity: 1, location: 'Ruang Sound/Media' });
-  const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -574,6 +572,11 @@ const InventoryView = ({ category, items, onAdd, onDelete }: any) => {
             </div>
             <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedGearQR.name}</h4>
             <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedGearQR.qrCodeId || 'GEAR-XXXXXX'}</p>
+            <div className="mt-4 text-xs text-slate-500 space-y-1 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-left">
+              <div>📍 <b>Lokasi:</b> {selectedGearQR.location}</div>
+              <div>📦 <b>Jumlah:</b> {selectedGearQR.quantity} unit</div>
+              <div>⚡ <b>Kondisi:</b> {selectedGearQR.condition}</div>
+            </div>
             <div className="mt-6 flex flex-col gap-2">
               <Button onClick={() => handleDownloadGearQR(selectedGearQR.name, selectedGearQR.qrCodeId || 'GEAR')} variant="secondary" className="w-full">
                 <Download className="w-4 h-4" /> Download QR Code
@@ -1098,7 +1101,7 @@ export default function App() {
   });
 
   const toggleMenu = (key: string) => {
-    setExpandedMenus(prev => ({ ...prev, [key]: !prev[key] }));
+    setExpandedMenus(prev => ({ ...prev, [key]: !prev[key] }))
   };
 
   const [members, setMembers] = useState<Member[]>([]);
@@ -1110,6 +1113,9 @@ export default function App() {
   const [schedules, setSchedules] = useState<Rota[]>([]);
   const [prayers, setPrayers] = useState<Prayer[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+
+  // State for Deep Link QR Inspection popup
+  const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -1132,9 +1138,38 @@ export default function App() {
     const getColRef = (colName: string) => collection(db, 'artifacts', appId, 'public', 'data', colName);
     
     const unsubs = [
-      onSnapshot(getColRef('members'), s => setMembers(s.docs.map(d => ({ id: d.id, ...d.data() }) as Member))),
+      onSnapshot(getColRef('members'), s => {
+        const loadedMembers = s.docs.map(d => ({ id: d.id, ...d.data() }) as Member);
+        setMembers(loadedMembers);
+        
+        // Check hash for deep link member
+        const hash = window.location.hash;
+        if (hash.includes('#member=')) {
+          const qrId = hash.split('#member=')[1];
+          const matched = loadedMembers.find(m => m.qrId === qrId);
+          if (matched) {
+            setCurrentView('members');
+          }
+        }
+      }),
       onSnapshot(getColRef('transactions'), s => setTransactions(s.docs.map(d => ({ id: d.id, ...d.data() }) as Transaction))),
-      onSnapshot(getColRef('inventory'), s => setInventory(s.docs.map(d => ({ id: d.id, ...d.data() }) as InventoryItem))),
+      onSnapshot(getColRef('inventory'), s => {
+        const loadedInventory = s.docs.map(d => ({ id: d.id, ...d.data() }) as InventoryItem);
+        setInventory(loadedInventory);
+
+        // Check hash for deep link gear
+        const hash = window.location.hash;
+        if (hash.includes('#gear=')) {
+          const qrCodeId = hash.split('#gear=')[1];
+          const matchedGear = loadedInventory.find(i => i.qrCodeId === qrCodeId);
+          if (matchedGear) {
+            if (matchedGear.category === 'Sound System') setCurrentView('inventory_sound');
+            else if (matchedGear.category === 'Multimedia') setCurrentView('inventory_media');
+            else if (matchedGear.category === 'Properti') setCurrentView('inventory_property');
+            setSelectedGearQR(matchedGear);
+          }
+        }
+      }),
       onSnapshot(getColRef('borrowings'), s => setBorrowings(s.docs.map(d => ({ id: d.id, ...d.data() }) as BorrowingRequest))),
       onSnapshot(getColRef('events'), s => setEvents(s.docs.map(d => ({ id: d.id, ...d.data() }) as EventItem))),
       onSnapshot(getColRef('songs'), s => setSongs(s.docs.map(d => ({ id: d.id, ...d.data() }) as Song))),
@@ -1240,9 +1275,9 @@ export default function App() {
           {currentView === 'members' && <MembersView members={members} onAdd={(d: any) => handleAddDoc('members', d)} onDelete={(id: string) => handleDeleteDoc('members', id)} onUpdateXP={(id: string, newXp: number) => handleUpdateDoc('members', id, { xp: newXp })} />}
           {currentView === 'finance' && <FinanceView transactions={transactions} stats={dashboardStats} onAdd={(d: any) => handleAddDoc('transactions', d)} />}
           
-          {currentView === 'inventory_sound' && <InventoryView category="Sound System" items={inventory.filter(i => i.category === 'Sound System')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} />}
-          {currentView === 'inventory_media' && <InventoryView category="Multimedia" items={inventory.filter(i => i.category === 'Multimedia')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} />}
-          {currentView === 'inventory_property' && <InventoryView category="Properti" items={inventory.filter(i => i.category === 'Properti')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} />}
+          {currentView === 'inventory_sound' && <InventoryView category="Sound System" items={inventory.filter(i => i.category === 'Sound System')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} selectedGearQR={selectedGearQR} setSelectedGearQR={setSelectedGearQR} />}
+          {currentView === 'inventory_media' && <InventoryView category="Multimedia" items={inventory.filter(i => i.category === 'Multimedia')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} selectedGearQR={selectedGearQR} setSelectedGearQR={setSelectedGearQR} />}
+          {currentView === 'inventory_property' && <InventoryView category="Properti" items={inventory.filter(i => i.category === 'Properti')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} selectedGearQR={selectedGearQR} setSelectedGearQR={setSelectedGearQR} />}
           
           {currentView === 'borrowing' && <BorrowingView borrowings={borrowings} inventory={inventory} onAdd={(d: any) => handleAddDoc('borrowings', d)} onUpdateStatus={(id: string, s: string) => handleUpdateDoc('borrowings', id, { status: s })} />}
           {currentView === 'calendar' && <CalendarView events={events} onAdd={(d: any) => handleAddDoc('events', d)} />}
