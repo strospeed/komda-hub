@@ -26,6 +26,8 @@ export const DISCORD_INVITE_CODE = 'uEac8TZxec';
 export const DISCORD_INVITE_URL = `https://discord.gg/${DISCORD_INVITE_CODE}`;
 export const CHURCH_WEBSITE_URL = 'https://www.gkjslogohimo.web.id/';
 
+const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
+
 const firebaseConfig = {
   apiKey: 'AIzaSyAqNuViryXML4war1pXTjxm9l6VIqGhB0A',
   authDomain: 'komda-hub.firebaseapp.com',
@@ -181,7 +183,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
             onUpdateXP(foundMember.id, (foundMember.xp || 0) + 10);
             alert(`Berhasil! Kehadiran ${foundMember.name} dicatat (+10 XP).`);
           } else {
-            alert(`QR Code terdeteksi: ${decodedText}, tetapi anggota tidak ditemukan.`);
+            alert(`QR Code terdeteksi: "${decodedText}", tetapi anggota tidak terdaftar di database.`);
           }
         },
         (error: any) => {}
@@ -837,7 +839,9 @@ export default function App() {
       <aside className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-white/90 dark:bg-slate-900/90 border-r border-slate-200 dark:border-slate-800/80 z-50 backdrop-blur-xl transform transition-transform duration-300 ease-in-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/60">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg"><Sparkles className="w-5 h-5 text-white" /></div>
+            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg bg-white flex items-center justify-center">
+              <img src={LOGO_URL} alt="Logo" className="w-full h-full object-cover" />
+            </div>
             <div>
               <h1 className="text-lg font-black tracking-wider">KOMDA HUB</h1>
               <span className="text-[10px] uppercase font-bold text-indigo-500 tracking-widest block -mt-1">Church Engine</span>
@@ -879,7 +883,9 @@ export default function App() {
           <div className="flex items-center gap-4">
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"><Menu className="w-6 h-6" /></button>
             <button onClick={() => setCurrentView('dashboard')} className="hidden sm:flex items-center gap-2 group transition-all">
-              <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform"><Sparkles className="w-4 h-4 text-white" /></div>
+              <div className="w-7 h-7 rounded-lg overflow-hidden shadow-lg bg-white flex items-center justify-center group-hover:scale-105 transition-transform">
+                <img src={LOGO_URL} alt="Logo" className="w-full h-full object-cover" />
+              </div>
               <span className="text-sm font-black tracking-widest uppercase group-hover:text-indigo-500 transition-colors">KOMDA HUB</span>
             </button>
           </div>
