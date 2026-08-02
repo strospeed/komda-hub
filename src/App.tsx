@@ -56,7 +56,7 @@ export interface Prayer { id: string; author: string; content: string; date: str
 export interface Task { id: string; title: string; assignee: string; status: 'To Do' | 'In Progress' | 'Done'; event: string; }
 
 const Card = ({ children, className = '', onClick }: any) => (
-  <div onClick={onClick} className={`bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl transition-all duration-300 ${onClick ? 'cursor-pointer hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1' : ''} ${className}`}>
+  <div onClick={onClick} className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl transition-all duration-300 ${onClick ? 'cursor-pointer hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1' : ''} ${className}`}>
     {children}
   </div>
 );
@@ -80,15 +80,15 @@ const Button = ({ children, variant = 'primary', className = '', ...props }: any
 const Input = ({ label, ...props }: any) => (
   <div className="mb-4 w-full">
     {label && <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{label}</label>}
-    <input {...props} className="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
+    <input {...props} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
   </div>
 );
 
 const Select = ({ label, options, ...props }: any) => (
   <div className="mb-4 w-full">
     {label && <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{label}</label>}
-    <select {...props} className="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm appearance-none">
-      {options.map((opt: any) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+    <select {...props} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm appearance-none">
+      {options.map((opt: any) => <option key={opt.value} value={opt.value} className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200">{opt.label}</option>)}
     </select>
   </div>
 );
@@ -96,7 +96,7 @@ const Select = ({ label, options, ...props }: any) => (
 const Textarea = ({ label, ...props }: any) => (
   <div className="mb-4 w-full">
     {label && <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{label}</label>}
-    <textarea {...props} className="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
+    <textarea {...props} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
   </div>
 );
 
@@ -271,7 +271,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
         </Card>
       )}
 
-      <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
             <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
@@ -397,7 +397,7 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
               {transactions.sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t: Transaction) => (
                 <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
                   <td className="px-6 py-4 text-xs font-mono">{new Date(t.date).toLocaleDateString('id-ID')}</td>
-                  <td className="px-6 py-4 font-semibold">{t.description}</td>
+                  <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{t.description}</td>
                   <td className="px-6 py-4"><Badge color={t.type === 'income' ? 'emerald' : 'rose'}>{t.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}</Badge></td>
                   <td className={`px-6 py-4 text-right font-mono font-bold ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>{t.type === 'income' ? '+' : '-'} Rp {t.amount.toLocaleString('id-ID')}</td>
                 </tr>
@@ -454,7 +454,7 @@ const InventoryView = ({ category, items, onAdd, onDelete }: any) => {
               <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">{item.name}</h3>
               <Badge color={item.condition === 'Good' ? 'emerald' : item.condition === 'Needs Repair' ? 'amber' : 'rose'}>{item.condition === 'Good' ? 'Baik' : item.condition === 'Needs Repair' ? 'Servis' : 'Rusak'}</Badge>
             </div>
-            <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400 mt-auto pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400 mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
               <div className="flex justify-between"><span>Jumlah:</span><span className="text-slate-900 dark:text-white font-bold">{item.quantity} unit</span></div>
               <div className="flex justify-between"><span>Lokasi:</span><span className="text-slate-700 dark:text-slate-300">{item.location}</span></div>
               <div className="flex justify-between items-center pt-1">
@@ -626,7 +626,7 @@ const WorshipSongLibraryView = ({ songs, onAdd, onDelete }: any) => {
 
             <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4">{selectedSong.title}</h3>
             
-            <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
               <pre className="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
                 {getTransformedLyrics(selectedSong.lyrics || 'Tidak ada lirik atau chord yang dicatat.')}
               </pre>
@@ -759,7 +759,9 @@ const TaskBoardView = ({ tasks, onAdd, onUpdateStatus }: any) => {
             <div className="flex justify-between items-center mt-3 border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="text-xs text-slate-500">{t.assignee}</span>
               <select className="text-xs bg-transparent text-indigo-500 font-bold focus:outline-none" value={t.status} onChange={(e) => onUpdateStatus(t.id, e.target.value)}>
-                <option value="To Do">To Do</option><option value="In Progress">In Progress</option><option value="Done">Done</option>
+                <option value="To Do" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">To Do</option>
+                <option value="In Progress" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">In Progress</option>
+                <option value="Done" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Done</option>
               </select>
             </div>
           </Card>
@@ -900,7 +902,7 @@ export default function App() {
               <img src={LOGO_URL} alt="Logo" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="text-lg font-black tracking-wider">KOMDA HUB</h1>
+              <h1 className="text-lg font-black tracking-wider text-slate-900 dark:text-white">KOMDA HUB</h1>
               <span className="text-[10px] uppercase font-bold text-indigo-500 tracking-widest block -mt-1">Church Engine</span>
             </div>
           </div>
@@ -943,12 +945,12 @@ export default function App() {
               <div className="w-7 h-7 rounded-lg overflow-hidden shadow-lg bg-white flex items-center justify-center group-hover:scale-105 transition-transform">
                 <img src={LOGO_URL} alt="Logo" className="w-full h-full object-cover" />
               </div>
-              <span className="text-sm font-black tracking-widest uppercase group-hover:text-indigo-500 transition-colors">KOMDA HUB</span>
+              <span className="text-sm font-black tracking-widest uppercase text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">KOMDA HUB</span>
             </button>
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
-              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
             <Badge color="emerald">Online</Badge>
             <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">AD</div>
