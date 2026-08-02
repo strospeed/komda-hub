@@ -837,6 +837,7 @@ export default function App() {
   const [prayers, setPrayers] = useState<Prayer[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  // Efek reaktif untuk memasang kelas `dark` pada elemen HTML root dokumen
   useEffect(() => {
     const root = document.documentElement;
     if (isDarkMode) {
