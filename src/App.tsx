@@ -161,15 +161,12 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
   const [formData, setFormData] = useState({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
   const [selectedQR, setSelectedQR] = useState<Member | null>(null);
   
-  // State baru untuk mengontrol modal kamera scanner
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
 
-  // Efek untuk menjalankan html5-qrcode scanner saat mode scan aktif
   useEffect(() => {
     if (!isScanning) return;
     
-    // Pastikan library sudah dimuat
     const scannerId = "reader";
     // @ts-ignore
     if (window.Html5QrcodeScanner) {
@@ -186,7 +183,6 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
           scanner.clear();
           setIsScanning(false);
           
-          // Cari anggota berdasarkan qrId yang berhasil di-scan
           const foundMember = members.find((m: Member) => m.qrId === decodedText);
           if (foundMember) {
             onUpdateXP(foundMember.id, (foundMember.xp || 0) + 10);
@@ -195,9 +191,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
             alert(`QR Code terdeteksi: ${decodedText}, tetapi anggota tidak ditemukan di database.`);
           }
         },
-        (error: any) => {
-          // Error saat proses scanning (biasanya diabaikan karena scanner terus mencari)
-        }
+        (error: any) => {}
       );
 
       return () => {
@@ -209,6 +203,158 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
       };
     }
   }, [isScanning, members, onUpdateXP]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const qrId = `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`;
+    onAdd({ ...formData, joinDate: new Date().toISOString(), xp: Number(formData.xp) || 0, qrId });
+    setIsAdding(false);
+    setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
+  };
+
+  const sortedMembers = useMemo(() => [...members].sort((a, b) => (b.xp || 0) - (a.xp || 0)), [members]);
+  const getRoleColor = (role: string) => role === 'Super Admin' ? 'purple' : role === 'Ketua' || role === 'Pengurus' ? 'indigo' : role === 'Bendahara' ? 'emerald' : role === 'PJ Sound' ? 'amber' : role === 'PJ Media' ? 'cyan' : 'slate';
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+            <Trophy className="w-8 h-8 text-amber-500 dark:text-amber-400" /> Anggota & Kartu ID
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manajemen anggota, XP pelayanan, dan ID QR Code (Absensi).</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => setIsScanning(true)}>
+            <ScanLine className="w-4 h-4" /> Scan Presensi
+          </Button>
+          <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Anggota</Button>
+        </div>
+      </div>
+
+      {isScanning && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl relative border border-slate-200 dark:border-slate-800">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Arahkan Kamera ke QR Code</h3>
+              <button onClick={() => setIsScanning(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
+            </div>
+            <div id="reader" className="overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-950"></div>
+            <p className="text-xs text-slate-500 text-center mt-4">Sistem akan otomatis mencatat kehadiran dan menambah +10 XP saat QR terbaca.</p>
+          </div>
+        </div>
+      )}
+
+      {selectedQR && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border border-slate-200 dark:border-slate-800">
+            <button onClick={() => setSelectedQR(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">KOMDA ID</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedQR.division} Division</p>
+            
+            <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedQR.qrId || 'MEMBER-DEFAULT'}`} 
+                alt="QR Code Anggota" 
+                className="w-48 h-48 object-contain"
+              />
+            </div>
+            
+            <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedQR.name}</h4>
+            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedQR.qrId || 'MEMBER-XXXXXX'}</p>
+            
+            <div className="mt-6 flex justify-center gap-2">
+              <Button onClick={() => onUpdateXP(selectedQR.id, (selectedQR.xp || 0) + 10)} variant="emerald" className="w-full">
+                <CheckCircle className="w-4 h-4" /> Hadir (+10 XP)
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAdding && (
+        <Card className="border-indigo-500/50">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Nama Lengkap" required value={formData.name} onChange={(e:any) => setFormData({...formData, name: e.target.value})} placeholder="Contoh: Daniel Wibowo" />
+            <Select label="Jabatan/Role" value={formData.role} onChange={(e:any) => setFormData({...formData, role: e.target.value})} options={[{value:'Anggota',label:'Anggota'},{value:'Pengurus',label:'Pengurus'},{value:'PJ Sound',label:'PJ Sound System'},{value:'PJ Media',label:'PJ Multimedia'},{value:'Bendahara',label:'Bendahara'},{value:'Ketua',label:'Ketua / Pembina'},{value:'Super Admin',label:'Super Admin'}]} />
+            <Input label="Divisi Pelayanan" value={formData.division} onChange={(e:any) => setFormData({...formData, division: e.target.value})} placeholder="Puji-Pujian / Sound / Media" />
+            <Input label="Kontak (WA/Discord)" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} placeholder="@username atau 0812..." />
+            <Input label="XP Poin" type="number" min="0" value={formData.xp} onChange={(e:any) => setFormData({...formData, xp: e.target.value})} />
+            <div className="md:col-span-2 flex justify-end gap-2 mt-2">
+              <Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button>
+              <Button type="submit">Simpan Anggota</Button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th className="px-6 py-4">Rank</th>
+                <th className="px-6 py-4">Nama & ID</th>
+                <th className="px-6 py-4">Jabatan & Divisi</th>
+                <th className="px-6 py-4 text-center">Keaktifan (XP)</th>
+                <th className="px-6 py-4 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {sortedMembers.map((member: Member, index: number) => {
+                const maxXP = sortedMembers[0]?.xp || 100;
+                const progressPercent = Math.min(100, Math.round(((member.xp || 0) / maxXP) * 100));
+                return (
+                  <tr key={member.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                    <td className="px-6 py-4">
+                      {index === 0 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 font-bold">🥇 1</span> : 
+                       index === 1 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-400/20 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-400/30 font-bold">🥈 2</span> : 
+                       index === 2 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-orange-100 dark:bg-amber-700/20 text-orange-700 dark:text-amber-600 border border-orange-200 dark:border-amber-700/30 font-bold">🥉 3</span> : 
+                       <span className="font-mono text-slate-400 dark:text-slate-500 ml-2">#{index + 1}</span>}
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400 uppercase">
+                          {member.name.substring(0, 2)}
+                        </div>
+                        <div>
+                          <div>{member.name}</div>
+                          <button onClick={() => setSelectedQR(member)} className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-mono mt-0.5">
+                            <QrCode className="w-3 h-3"/> Tampilkan QR ID
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge color={getRoleColor(member.role)}>{member.role}</Badge>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{member.division || 'Umum'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="w-40 mx-auto">
+                        <div className="flex justify-between items-center mb-1 text-xs">
+                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{member.xp || 0} XP</span>
+                          <span className="text-slate-500">{progressPercent}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 dark:bg-slate-950 rounded-full h-1.5 overflow-hidden">
+                          <div className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-1.5 rounded-full" style={{ width: `${progressPercent}%` }}></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button onClick={() => onDelete(member.id)} className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
