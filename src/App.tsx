@@ -54,10 +54,7 @@ export interface Prayer { id: string; author: string; content: string; date: str
 export interface Task { id: string; title: string; assignee: string; status: 'To Do' | 'In Progress' | 'Done'; event: string; }
 
 const Card = ({ children, className = '', onClick }: any) => (
-  <div 
-    onClick={onClick} 
-    className={`bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl transition-all duration-300 ${onClick ? 'cursor-pointer hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1' : ''} ${className}`}
-  >
+  <div onClick={onClick} className={`bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl transition-all duration-300 ${onClick ? 'cursor-pointer hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1' : ''} ${className}`}>
     {children}
   </div>
 );
@@ -81,7 +78,7 @@ const Button = ({ children, variant = 'primary', className = '', ...props }: any
 const Input = ({ label, ...props }: any) => (
   <div className="mb-4 w-full">
     {label && <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{label}</label>}
-    <input {...props} className="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
+    <input {...props} className="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
   </div>
 );
 
@@ -97,7 +94,7 @@ const Select = ({ label, options, ...props }: any) => (
 const Textarea = ({ label, ...props }: any) => (
   <div className="mb-4 w-full">
     {label && <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{label}</label>}
-    <textarea {...props} className="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
+    <textarea {...props} className="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm" />
   </div>
 );
 
@@ -340,375 +337,6 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
   );
 };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const qrId = `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`;
-    onAdd({ ...formData, joinDate: new Date().toISOString(), xp: Number(formData.xp) || 0, qrId });
-    setIsAdding(false);
-    setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
-  };
-
-  const sortedMembers = useMemo(() => [...members].sort((a, b) => (b.xp || 0) - (a.xp || 0)), [members]);
-  const getRoleColor = (role: string) => role === 'Super Admin' ? 'purple' : role === 'Ketua' || role === 'Pengurus' ? 'indigo' : role === 'Bendahara' ? 'emerald' : role === 'PJ Sound' ? 'amber' : role === 'PJ Media' ? 'cyan' : 'slate';
-
-  return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-amber-500 dark:text-amber-400" /> Anggota & Kartu ID
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manajemen anggota, XP pelayanan, dan ID QR Code (Absensi).</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => setIsScanning(true)}>
-            <ScanLine className="w-4 h-4" /> Scan Presensi
-          </Button>
-          <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Anggota</Button>
-        </div>
-      </div>
-
-      {isScanning && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Arahkan Kamera ke QR Code</h3>
-              <button onClick={() => setIsScanning(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
-            </div>
-            <div id="reader" className="overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-950"></div>
-            <p className="text-xs text-slate-500 text-center mt-4">Sistem akan otomatis mencatat kehadiran dan menambah +10 XP saat QR terbaca.</p>
-          </div>
-        </div>
-      )}
-
-      {selectedQR && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <button onClick={() => setSelectedQR(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">KOMDA ID</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedQR.division} Division</p>
-            
-            <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedQR.qrId || 'MEMBER-DEFAULT'}`} 
-                alt="QR Code Anggota" 
-                className="w-48 h-48 object-contain"
-              />
-            </div>
-            
-            <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedQR.name}</h4>
-            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedQR.qrId || 'MEMBER-XXXXXX'}</p>
-            
-            <div className="mt-6 flex justify-center gap-2">
-              <Button onClick={() => onUpdateXP(selectedQR.id, (selectedQR.xp || 0) + 10)} variant="emerald" className="w-full">
-                <CheckCircle className="w-4 h-4" /> Hadir (+10 XP)
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isAdding && (
-        <Card className="border-indigo-500/50">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Nama Lengkap" required value={formData.name} onChange={(e:any) => setFormData({...formData, name: e.target.value})} placeholder="Contoh: Daniel Wibowo" />
-            <Select label="Jabatan/Role" value={formData.role} onChange={(e:any) => setFormData({...formData, role: e.target.value})} options={[{value:'Anggota',label:'Anggota'},{value:'Pengurus',label:'Pengurus'},{value:'PJ Sound',label:'PJ Sound System'},{value:'PJ Media',label:'PJ Multimedia'},{value:'Bendahara',label:'Bendahara'},{value:'Ketua',label:'Ketua / Pembina'},{value:'Super Admin',label:'Super Admin'}]} />
-            <Input label="Divisi Pelayanan" value={formData.division} onChange={(e:any) => setFormData({...formData, division: e.target.value})} placeholder="Puji-Pujian / Sound / Media" />
-            <Input label="Kontak (WA/Discord)" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} placeholder="@username atau 0812..." />
-            <Input label="XP Poin" type="number" min="0" value={formData.xp} onChange={(e:any) => setFormData({...formData, xp: e.target.value})} />
-            <div className="md:col-span-2 flex justify-end gap-2 mt-2">
-              <Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button>
-              <Button type="submit">Simpan Anggota</Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="px-6 py-4">Rank</th>
-                <th className="px-6 py-4">Nama & ID</th>
-                <th className="px-6 py-4">Jabatan & Divisi</th>
-                <th className="px-6 py-4 text-center">Keaktifan (XP)</th>
-                <th className="px-6 py-4 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {sortedMembers.map((member: Member, index: number) => {
-                const maxXP = sortedMembers[0]?.xp || 100;
-                const progressPercent = Math.min(100, Math.round(((member.xp || 0) / maxXP) * 100));
-                return (
-                  <tr key={member.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-6 py-4">
-                      {index === 0 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 font-bold">🥇 1</span> : 
-                       index === 1 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-400/20 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-400/30 font-bold">🥈 2</span> : 
-                       index === 2 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-orange-100 dark:bg-amber-700/20 text-orange-700 dark:text-amber-600 border border-orange-200 dark:border-amber-700/30 font-bold">🥉 3</span> : 
-                       <span className="font-mono text-slate-400 dark:text-slate-500 ml-2">#{index + 1}</span>}
-                    </td>
-                    <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400 uppercase">
-                          {member.name.substring(0, 2)}
-                        </div>
-                        <div>
-                          <div>{member.name}</div>
-                          <button onClick={() => setSelectedQR(member)} className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-mono mt-0.5">
-                            <QrCode className="w-3 h-3"/> Tampilkan QR ID
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge color={getRoleColor(member.role)}>{member.role}</Badge>
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{member.division || 'Umum'}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="w-40 mx-auto">
-                        <div className="flex justify-between items-center mb-1 text-xs">
-                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{member.xp || 0} XP</span>
-                          <span className="text-slate-500">{progressPercent}%</span>
-                        </div>
-                        <div className="w-full bg-slate-100 dark:bg-slate-950 rounded-full h-1.5 overflow-hidden">
-                          <div className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-1.5 rounded-full" style={{ width: `${progressPercent}%` }}></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => onDelete(member.id)} className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const qrId = `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`;
-    onAdd({ ...formData, joinDate: new Date().toISOString(), xp: Number(formData.xp) || 0, qrId });
-    setIsAdding(false);
-    setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
-  };
-
-  const sortedMembers = useMemo(() => [...members].sort((a, b) => (b.xp || 0) - (a.xp || 0)), [members]);
-  const getRoleColor = (role: string) => role === 'Super Admin' ? 'purple' : role === 'Ketua' || role === 'Pengurus' ? 'indigo' : role === 'Bendahara' ? 'emerald' : role === 'PJ Sound' ? 'amber' : role === 'PJ Media' ? 'cyan' : 'slate';
-
-  return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-amber-500 dark:text-amber-400" /> Anggota & Kartu ID
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manajemen anggota, XP pelayanan, dan ID QR Code (Absensi).</p>
-        </div>
-        <div className="flex gap-2">
-          {/* Tombol Scan Presensi yang langsung memicu kamera */}
-          <Button variant="secondary" onClick={() => setIsScanning(true)}>
-            <ScanLine className="w-4 h-4" /> Scan Presensi
-          </Button>
-          <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Anggota</Button>
-        </div>
-      </div>
-
-      {/* Modal Kamera Scanner */}
-      {isScanning && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Arahkan Kamera ke QR Code</h3>
-              <button onClick={() => setIsScanning(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
-            </div>
-            
-            {/* Elemen wadah untuk kamera pembaca QR */}
-            <div id="reader" className="overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-950"></div>
-            
-            <p className="text-xs text-slate-500 text-center mt-4">Sistem akan otomatis mencatat kehadiran dan menambah +10 XP saat QR terbaca.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Modal QR Code Anggota */}
-      {selectedQR && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <button onClick={() => setSelectedQR(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">KOMDA ID</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedQR.division} Division</p>
-            
-            <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedQR.qrId || 'MEMBER-DEFAULT'}`} 
-                alt="QR Code Anggota" 
-                className="w-48 h-48 object-contain"
-              />
-            </div>
-            
-            <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedQR.name}</h4>
-            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedQR.qrId || 'MEMBER-XXXXXX'}</p>
-            
-            <div className="mt-6 flex justify-center gap-2">
-              <Button onClick={() => onUpdateXP(selectedQR.id, (selectedQR.xp || 0) + 10)} variant="emerald" className="w-full">
-                <CheckCircle className="w-4 h-4" /> Hadir (+10 XP)
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Seterusnya kode tabel anggota seperti biasa... */}
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const qrId = `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`;
-    onAdd({ ...formData, joinDate: new Date().toISOString(), xp: Number(formData.xp) || 0, qrId });
-    setIsAdding(false);
-    setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50 });
-  };
-
-  const sortedMembers = useMemo(() => [...members].sort((a, b) => (b.xp || 0) - (a.xp || 0)), [members]);
-  const getRoleColor = (role: string) => role === 'Super Admin' ? 'purple' : role === 'Ketua' || role === 'Pengurus' ? 'indigo' : role === 'Bendahara' ? 'emerald' : role === 'PJ Sound' ? 'amber' : role === 'PJ Media' ? 'cyan' : 'slate';
-
-  return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-amber-500 dark:text-amber-400" /> Anggota & Kartu ID
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manajemen anggota, XP pelayanan, dan ID QR Code (Absensi).</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => alert('Fitur kamera pemindai (Scan Presensi) siap diintegrasikan!')}>
-            <ScanLine className="w-4 h-4" /> Scan Presensi
-          </Button>
-          <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Anggota</Button>
-        </div>
-      </div>
-
-      {/* Modal QR Code */}
-      {selectedQR && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <button onClick={() => setSelectedQR(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">KOMDA ID</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedQR.division} Division</p>
-            
-            <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
-              {/* QR Code Asli yang bisa di-scan */}
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedQR.qrId || 'MEMBER-DEFAULT'}`} 
-                alt="QR Code Anggota" 
-                className="w-48 h-48 object-contain"
-              />
-            </div>
-            
-            <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedQR.name}</h4>
-            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedQR.qrId || 'MEMBER-XXXXXX'}</p>
-            
-            <div className="mt-6 flex justify-center gap-2">
-              <Button onClick={() => onUpdateXP(selectedQR.id, (selectedQR.xp || 0) + 10)} variant="emerald" className="w-full">
-                <CheckCircle className="w-4 h-4" /> Hadir (+10 XP)
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isAdding && (
-        <Card className="border-indigo-500/50">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Nama Lengkap" required value={formData.name} onChange={(e:any) => setFormData({...formData, name: e.target.value})} placeholder="Contoh: Daniel Wibowo" />
-            <Select label="Jabatan/Role" value={formData.role} onChange={(e:any) => setFormData({...formData, role: e.target.value})} options={[{value:'Anggota',label:'Anggota'},{value:'Pengurus',label:'Pengurus'},{value:'PJ Sound',label:'PJ Sound System'},{value:'PJ Media',label:'PJ Multimedia'},{value:'Bendahara',label:'Bendahara'},{value:'Ketua',label:'Ketua / Pembina'},{value:'Super Admin',label:'Super Admin'}]} />
-            <Input label="Divisi Pelayanan" value={formData.division} onChange={(e:any) => setFormData({...formData, division: e.target.value})} placeholder="Puji-Pujian / Sound / Media" />
-            <Input label="Kontak (WA/Discord)" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} placeholder="@username atau 0812..." />
-            <Input label="XP Poin" type="number" min="0" value={formData.xp} onChange={(e:any) => setFormData({...formData, xp: e.target.value})} />
-            <div className="md:col-span-2 flex justify-end gap-2 mt-2">
-              <Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button>
-              <Button type="submit">Simpan Anggota</Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="px-6 py-4">Rank</th>
-                <th className="px-6 py-4">Nama & ID</th>
-                <th className="px-6 py-4">Jabatan & Divisi</th>
-                <th className="px-6 py-4 text-center">Keaktifan (XP)</th>
-                <th className="px-6 py-4 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {sortedMembers.map((member: Member, index: number) => {
-                const maxXP = sortedMembers[0]?.xp || 100;
-                const progressPercent = Math.min(100, Math.round(((member.xp || 0) / maxXP) * 100));
-                return (
-                  <tr key={member.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-6 py-4">
-                      {index === 0 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 font-bold">🥇 1</span> : 
-                       index === 1 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-400/20 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-400/30 font-bold">🥈 2</span> : 
-                       index === 2 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-orange-100 dark:bg-amber-700/20 text-orange-700 dark:text-amber-600 border border-orange-200 dark:border-amber-700/30 font-bold">🥉 3</span> : 
-                       <span className="font-mono text-slate-400 dark:text-slate-500 ml-2">#{index + 1}</span>}
-                    </td>
-                    <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400 uppercase">
-                          {member.name.substring(0, 2)}
-                        </div>
-                        <div>
-                          <div>{member.name}</div>
-                          <button onClick={() => setSelectedQR(member)} className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-mono mt-0.5">
-                            <QrCode className="w-3 h-3"/> Tampilkan QR ID
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge color={getRoleColor(member.role)}>{member.role}</Badge>
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{member.division || 'Umum'}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="w-40 mx-auto">
-                        <div className="flex justify-between items-center mb-1 text-xs">
-                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{member.xp || 0} XP</span>
-                          <span className="text-slate-500">{progressPercent}%</span>
-                        </div>
-                        <div className="w-full bg-slate-100 dark:bg-slate-950 rounded-full h-1.5 overflow-hidden">
-                          <div className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-1.5 rounded-full" style={{ width: `${progressPercent}%` }}></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => onDelete(member.id)} className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const FinanceView = ({ transactions, onAdd, stats }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ type: 'income', amount: '', description: '', category: 'Persembahan Kasih', date: new Date().toISOString().split('T')[0] });
@@ -720,34 +348,6 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
     setFormData({ type: 'income', amount: '', description: '', category: 'Persembahan Kasih', date: new Date().toISOString().split('T')[0] });
   };
 
-  const handleExportExcel = () => {
-    let excelHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table border="1"><tr><td colspan="5" style="font-size: 16px; font-weight: bold; text-align: center;">BUKU KAS - KOMDA HUB</td></tr><tr style="background-color: #4338ca; color: white; font-weight: bold; text-align: center;"><th>Tanggal</th><th>Keterangan</th><th>Pemasukan (Rp)</th><th>Pengeluaran (Rp)</th><th>Saldo Akhir (Rp)</th></tr>`;
-    const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    let runningBalance = 0;
-    sortedTransactions.forEach((t: any) => {
-      const amount = Number(t.amount) || 0;
-      if (t.type === 'income') runningBalance += amount; else runningBalance -= amount;
-      excelHTML += `<tr><td>${t.date}</td><td>${t.description}</td><td style="text-align: right;">${t.type === 'income' ? amount : '-'}</td><td style="text-align: right;">${t.type === 'expense' ? amount : '-'}</td><td style="text-align: right;">${runningBalance}</td></tr>`;
-    });
-    excelHTML += `</table></body></html>`;
-    const blob = new Blob([excelHTML], { type: 'application/vnd.ms-excel' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Buku_Kas_${new Date().toISOString().split('T')[0]}.xls`; a.click();
-  };
-
-  const handleExportPDF = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    let runningBalance = 0; let tableRows = '';
-    sortedTransactions.forEach((t: any) => {
-      const amount = Number(t.amount) || 0;
-      if (t.type === 'income') runningBalance += amount; else runningBalance -= amount;
-      tableRows += `<tr><td style="padding: 8px; border: 1px solid #cbd5e1; font-family: monospace;">${t.date}</td><td style="padding: 8px; border: 1px solid #cbd5e1;">${t.description}</td><td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">${t.type === 'income' ? 'Rp ' + amount.toLocaleString('id-ID') : '-'}</td><td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">${t.type === 'expense' ? 'Rp ' + amount.toLocaleString('id-ID') : '-'}</td><td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">Rp ${runningBalance.toLocaleString('id-ID')}</td></tr>`;
-    });
-    const htmlContent = `<html><head><title>Laporan Keuangan KOMDA</title><style>body { font-family: sans-serif; padding: 20px; color: #1e293b; } h1 { text-align: center; } .subtitle { text-align: center; color: #64748b; margin-bottom: 30px; } table { width: 100%; border-collapse: collapse; } th { background-color: #4f46e5; color: white; padding: 12px; border: 1px solid #cbd5e1; } .summary { margin-top: 20px; padding: 15px; background: #f8fafc; border: 1px solid #cbd5e1; font-weight: bold; } @media print { button { display: none; } }</style></head><body><h1>Laporan Kas & Keuangan</h1><div class="subtitle">Dicetak: ${new Date().toLocaleDateString('id-ID')}</div><table><thead><tr><th>Tanggal</th><th>Keterangan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th></tr></thead><tbody>${tableRows}</tbody></table><div class="summary">Saldo Akhir: Rp ${stats.balance.toLocaleString('id-ID')}</div><script>window.onload=()=>{setTimeout(()=>{window.print();window.close();},500);}</script></body></html>`;
-    printWindow.document.write(htmlContent); printWindow.document.close();
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -756,11 +356,7 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
             <DollarSign className="w-8 h-8 text-emerald-500 dark:text-emerald-400" /> Keuangan & Kas
           </h2>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
-            <button onClick={handleExportExcel} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded text-slate-600 hover:text-indigo-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-700 transition-all"><FileText className="w-4 h-4" /> Excel</button>
-            <button onClick={handleExportPDF} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded text-slate-600 hover:text-rose-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-700 transition-all"><Download className="w-4 h-4" /> PDF</button>
-          </div>
+        <div className="flex gap-2">
           <Button variant="emerald" onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Catat Transaksi</Button>
         </div>
       </div>
@@ -835,7 +431,6 @@ const InventoryView = ({ category, items, onAdd, onDelete }: any) => {
           </h2>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => alert('Fitur Scan Barcode siap diintegrasikan!')}><ScanLine className="w-4 h-4"/> Scan Alat</Button>
           <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Gear</Button>
         </div>
       </div>
@@ -968,49 +563,26 @@ const DiscordWebhookView = () => {
 
 const WorshipSongLibraryView = ({ songs, onAdd }: any) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<Song | null>(null); // State untuk modal lirik aktif
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [formData, setFormData] = useState({ title: '', key: 'C', lyrics: '' });
-
-  const handleSubmit = (e: React.FormEvent) => { 
-    e.preventDefault(); 
-    onAdd(formData); 
-    setIsAdding(false); 
-    setFormData({ title: '', key: 'C', lyrics: '' }); 
-  };
-
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onAdd(formData); setIsAdding(false); setFormData({ title: '', key: 'C', lyrics: '' }); };
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
-          <Music className="w-8 h-8 text-rose-500" /> Database Pujian
-        </h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><Music className="w-8 h-8 text-rose-500" /> Database Pujian</h2>
         <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Lagu</Button>
       </div>
 
-      {/* Modal Detail Lirik & Chord */}
       {selectedSong && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <button 
-              onClick={() => setSelectedSong(null)} 
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white p-2"
-            >
-              <X className="w-6 h-6"/>
-            </button>
-            <div className="flex items-center gap-3 mb-4">
-              <Badge color="rose">Key: {selectedSong.key}</Badge>
-            </div>
+            <button onClick={() => setSelectedSong(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white p-2"><X className="w-6 h-6"/></button>
+            <div className="flex items-center gap-3 mb-4"><Badge color="rose">Key: {selectedSong.key}</Badge></div>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4">{selectedSong.title}</h3>
-            
             <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-              <pre className="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                {selectedSong.lyrics || 'Tidak ada lirik atau chord yang dicatat.'}
-              </pre>
+              <pre className="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{selectedSong.lyrics || 'Tidak ada lirik atau chord yang dicatat.'}</pre>
             </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button onClick={() => setSelectedSong(null)} variant="secondary">Tutup</Button>
-            </div>
+            <div className="mt-6 flex justify-end"><Button onClick={() => setSelectedSong(null)} variant="secondary">Tutup</Button></div>
           </div>
         </div>
       )}
@@ -1027,20 +599,13 @@ const WorshipSongLibraryView = ({ songs, onAdd }: any) => {
           </form>
         </Card>
       )}
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {songs.map((s: Song) => (
-          <Card 
-            key={s.id} 
-            onClick={() => setSelectedSong(s)} 
-            className="group relative overflow-hidden cursor-pointer hover:border-rose-500/50 transition-all"
-          >
+          <Card key={s.id} onClick={() => setSelectedSong(s)} className="group relative overflow-hidden cursor-pointer hover:border-rose-500/50 transition-all">
             <div className="absolute top-0 right-0 bg-rose-500 text-white font-bold text-xs px-3 py-1 rounded-bl-xl shadow-md">Key: {s.key}</div>
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mt-2 pr-8">{s.title}</h3>
             <p className="text-xs text-slate-500 mt-3 font-mono whitespace-pre-wrap line-clamp-4">{s.lyrics || 'Lirik belum tersedia.'}</p>
-            <div className="mt-4 text-xs font-semibold text-rose-500 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-              Klik untuk buka lirik & chord →
-            </div>
+            <div className="mt-4 text-xs font-semibold text-rose-500 flex items-center gap-1">Klik untuk buka lirik & chord →</div>
           </Card>
         ))}
         {songs.length === 0 && <p className="col-span-full text-slate-500 italic">Belum ada lagu. Tambahkan repertoar pujian pertama!</p>}
@@ -1172,10 +737,7 @@ const TaskBoardView = ({ tasks, onAdd, onUpdateStatus }: any) => {
 const NavGroup = ({ title, isOpen, onToggle, children }: any) => {
   return (
     <div className="mb-2">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 uppercase tracking-widest transition-colors group"
-      >
+      <button onClick={onToggle} className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 uppercase tracking-widest transition-colors group">
         <span>{title}</span>
         <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isOpen ? 'rotate-180 text-indigo-500 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-500 dark:group-hover:text-slate-300'}`} />
       </button>
@@ -1193,7 +755,6 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  // State untuk mengontrol dropdown menu mana yang sedang terbuka
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     utama: true,
     pelayanan: false,
@@ -1205,13 +766,11 @@ export default function App() {
     setExpandedMenus(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Data States
   const [members, setMembers] = useState<Member[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [borrowings, setBorrowings] = useState<BorrowingRequest[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
-  // New Data States
   const [songs, setSongs] = useState<Song[]>([]);
   const [schedules, setSchedules] = useState<Rota[]>([]);
   const [prayers, setPrayers] = useState<Prayer[]>([]);
@@ -1266,12 +825,7 @@ export default function App() {
   );
 
   const NavItem = ({ icon: Icon, label, view, isActive, colorClass = "text-slate-500 dark:text-slate-400" }: any) => (
-    <button
-      onClick={() => { setCurrentView(view); setIsSidebarOpen(false); }}
-      className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all duration-200 text-sm font-medium ${
-        isActive ? 'bg-indigo-600 text-white shadow-lg' : `${colorClass} hover:bg-slate-100 dark:hover:bg-slate-800/60`
-      }`}
-    >
+    <button onClick={() => { setCurrentView(view); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all duration-200 text-sm font-medium ${isActive ? 'bg-indigo-600 text-white shadow-lg' : `${colorClass} hover:bg-slate-100 dark:hover:bg-slate-800/60`}`}>
       <Icon className="w-4 h-4" /><span>{label}</span>
     </button>
   );
