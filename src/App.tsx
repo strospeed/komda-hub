@@ -25,7 +25,7 @@ import {
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
 export const CHURCH_WEBSITE_URL = 'https://gkjslogohimo.web.id/';
 export const CHURCH_EMAIL = 'gkj.slogohimo.wng@gmail.com';
-export const CHURCH_FB_URL = 'https://www.facebook.com/gkj.slogohimo.7#';
+export const CHURCH_FB_URL = 'https://www.facebook.com/gkj.slogohimo';
 export const CHURCH_IG_URL = 'https://www.instagram.com/komdagkjslogohimo/?hl=id';
 export const CHURCH_TIKTOK_URL = 'https://www.tiktok.com/@komdagkjslogohimo';
 export const CHURCH_YT_URL = 'https://www.youtube.com/@GKJSLOGOHIMO';
@@ -285,7 +285,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
               </div>
               <div className="truncate">
                 <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors truncate">Facebook Gereja</h4>
-                <p className="text-[11px] text-slate-500 truncate">gkj.slogohimo.7</p>
+                <p className="text-[11px] text-slate-500 truncate">gkj.slogohimo</p>
               </div>
             </div>
             <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors flex-shrink-0 ml-2" />
@@ -542,7 +542,7 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
   const handleExportPDF = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      alert('Mohonizinkan pop-up pada browser untuk mencetak PDF.');
+      alert('Mohon izinkan pop-up pada browser untuk mencetak PDF.');
       return;
     }
 
