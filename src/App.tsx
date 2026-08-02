@@ -19,7 +19,7 @@ import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
   FileText, LayoutDashboard, Plus, Trash2, CheckCircle, XCircle,
   Menu, X, ArrowRightLeft, Trophy, MessageSquare, Sparkles, Send,
-  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Info, ChevronDown, ExternalLink, Mail, PieChart
+  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Info, ChevronDown, ExternalLink, Mail, PieChart, Printer
 } from 'lucide-react';
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
@@ -539,6 +539,97 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
     setFormData({ type: 'income', amount: '', description: '', category: 'Persembahan Kasih', date: new Date().toISOString().split('T')[0] });
   };
 
+  const handleExportPDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Mohonizinkan pop-up pada browser untuk mencetak PDF.');
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Laporan Keuangan KOMDA GKJ Slogohimo</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ddd; padding-bottom: 15px; }
+          .header h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+          .header p { margin: 5px 0 0; color: #666; font-size: 12px; }
+          .summary { display: flex; justify-content: space-between; margin-bottom: 25px; gap: 15px; }
+          .summary-card { flex: 1; border: 1px solid #ccc; padding: 12px; border-radius: 6px; text-align: center; }
+          .summary-card h3 { margin: 0; font-size: 11px; color: #555; text-transform: uppercase; }
+          .summary-card p { margin: 6px 0 0; font-size: 16px; font-weight: bold; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+          th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+          th { background-color: #f4f4f4; }
+          .text-right { text-align: right; }
+          .income { color: #047857; font-weight: bold; }
+          .expense { color: #b91c1c; font-weight: bold; }
+          .footer { margin-top: 40px; text-align: right; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Laporan Keuangan KOMDA HUB</h1>
+          <p>GKJ Slogohimo • Dicetak pada: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+        
+        <div class="summary">
+          <div class="summary-card">
+            <h3>Total Pemasukan</h3>
+            <p style="color: #047857;">Rp ${stats.income.toLocaleString('id-ID')}</p>
+          </div>
+          <div class="summary-card">
+            <h3>Total Pengeluaran</h3>
+            <p style="color: #b91c1c;">Rp ${stats.expense.toLocaleString('id-ID')}</p>
+          </div>
+          <div class="summary-card">
+            <h3>Saldo Akhir Kas</h3>
+            <p>Rp ${stats.balance.toLocaleString('id-ID')}</p>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Keterangan</th>
+              <th>Jenis</th>
+              <th class="text-right">Jumlah (Rp)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${transactions.sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t: Transaction) => `
+              <tr>
+                <td>${new Date(t.date).toLocaleDateString('id-ID')}</td>
+                <td><b>${t.description}</b></td>
+                <td>${t.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}</td>
+                <td class="text-right ${t.type === 'income' ? 'income' : 'expense'}">
+                  ${t.type === 'income' ? '+' : '-'} Rp ${t.amount.toLocaleString('id-ID')}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p>Bendahara KOMDA GKJ Slogohimo</p>
+          <br><br>
+          <p><b>( ............................................ )</b></p>
+        </div>
+
+        <script>
+          window.onload = function() { window.print(); }
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -547,7 +638,8 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
             <DollarSign className="w-8 h-8 text-emerald-500 dark:text-emerald-400" /> Keuangan & Kas
           </h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={handleExportPDF}><Printer className="w-4 h-4" /> Export PDF / Cetak</Button>
           <Button variant="emerald" onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Catat Transaksi</Button>
         </div>
       </div>
