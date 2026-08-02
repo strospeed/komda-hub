@@ -557,14 +557,53 @@ const DiscordWebhookView = () => {
 
 const WorshipSongLibraryView = ({ songs, onAdd }: any) => {
   const [isAdding, setIsAdding] = useState(false);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null); // State untuk modal lirik aktif
   const [formData, setFormData] = useState({ title: '', key: 'C', lyrics: '' });
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onAdd(formData); setIsAdding(false); setFormData({ title: '', key: 'C', lyrics: '' }); };
+
+  const handleSubmit = (e: React.FormEvent) => { 
+    e.preventDefault(); 
+    onAdd(formData); 
+    setIsAdding(false); 
+    setFormData({ title: '', key: 'C', lyrics: '' }); 
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><Music className="w-8 h-8 text-rose-500" /> Database Pujian</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
+          <Music className="w-8 h-8 text-rose-500" /> Database Pujian
+        </h2>
         <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Lagu</Button>
       </div>
+
+      {/* Modal Detail Lirik & Chord */}
+      {selectedSong && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative border border-slate-200 dark:border-slate-800">
+            <button 
+              onClick={() => setSelectedSong(null)} 
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white p-2"
+            >
+              <X className="w-6 h-6"/>
+            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <Badge color="rose">Key: {selectedSong.key}</Badge>
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4">{selectedSong.title}</h3>
+            
+            <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+              <pre className="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                {selectedSong.lyrics || 'Tidak ada lirik atau chord yang dicatat.'}
+              </pre>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setSelectedSong(null)} variant="secondary">Tutup</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isAdding && (
         <Card className="border-rose-500/50">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -577,12 +616,20 @@ const WorshipSongLibraryView = ({ songs, onAdd }: any) => {
           </form>
         </Card>
       )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {songs.map((s: Song) => (
-          <Card key={s.id} className="group relative overflow-hidden">
+          <Card 
+            key={s.id} 
+            onClick={() => setSelectedSong(s)} 
+            className="group relative overflow-hidden cursor-pointer hover:border-rose-500/50 transition-all"
+          >
             <div className="absolute top-0 right-0 bg-rose-500 text-white font-bold text-xs px-3 py-1 rounded-bl-xl shadow-md">Key: {s.key}</div>
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mt-2 pr-8">{s.title}</h3>
             <p className="text-xs text-slate-500 mt-3 font-mono whitespace-pre-wrap line-clamp-4">{s.lyrics || 'Lirik belum tersedia.'}</p>
+            <div className="mt-4 text-xs font-semibold text-rose-500 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+              Klik untuk buka lirik & chord →
+            </div>
           </Card>
         ))}
         {songs.length === 0 && <p className="col-span-full text-slate-500 italic">Belum ada lagu. Tambahkan repertoar pujian pertama!</p>}
