@@ -32,8 +32,7 @@ export const CHURCH_TIKTOK_URL = 'https://www.tiktok.com/@komdagkjslogohimo';
 export const CHURCH_YT_URL = 'https://www.youtube.com/@GKJSLOGOHIMO';
 export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
 
-// Tuliskan email owner / admin utama pertama kali daftar:
-const OWNER_EMAIL = 'admin@gkjslogohimo.web.id'; 
+const OWNER_EMAIL = 'mariodimasputra01@gmail.com'; 
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
 
@@ -874,15 +873,15 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
         <div class="summary">
           <div class="summary-card">
             <h3>Total Pemasukan</h3>
-            <p style="color: #047857;">Rp {(stats?.income || 0).toLocaleString('id-ID')}</p>
+            <p style="color: #047857;">Rp ${(stats?.income || 0).toLocaleString('id-ID')}</p>
           </div>
           <div class="summary-card">
             <h3>Total Pengeluaran</h3>
-            <p style="color: #b91c1c;">Rp {(stats?.expense || 0).toLocaleString('id-ID')}</p>
+            <p style="color: #b91c1c;">Rp ${(stats?.expense || 0).toLocaleString('id-ID')}</p>
           </div>
           <div class="summary-card">
             <h3>Saldo Akhir Kas</h3>
-            <p>Rp {(stats?.balance || 0).toLocaleString('id-ID')}</p>
+            <p>Rp ${(stats?.balance || 0).toLocaleString('id-ID')}</p>
           </div>
         </div>
 
@@ -896,7 +895,7 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
             </tr>
           </thead>
           <tbody>
-            {transactions.sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t: Transaction) => `
+            ${transactions.sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t: Transaction) => `
               <tr>
                 <td>${new Date(t.date).toLocaleDateString('id-ID')}</td>
                 <td><b>${t.description}</b></td>
@@ -1612,12 +1611,10 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
 
-  // Perbaikan Keamanan Role: Selalu prioritaskan OWNER_EMAIL atau jika role di database tertulis Super Admin
   const currentUserRole = useMemo(() => {
     if (!user || !user.email) return 'Anggota';
     const emailLower = user.email.trim().toLowerCase();
     
-    // Fallback mutlak ke OWNER_EMAIL agar akun utama tidak pernah kehilangan hak Super Admin
     if (emailLower === OWNER_EMAIL.toLowerCase()) return 'Super Admin';
     
     const matchedMember = members.find(m => m.contact?.toLowerCase() === emailLower);
@@ -1815,7 +1812,6 @@ export default function App() {
               {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
 
-            {/* Menu Profil Kanan Atas dengan Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button 
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
