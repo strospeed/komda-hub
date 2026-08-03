@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -1523,6 +1523,8 @@ export default function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const currentUserRole = useMemo(() => {
     if (!user || !user.email) return 'Anggota';
@@ -1551,11 +1553,27 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
 
+  // Mencari data member berdasarkan email yang sedang login
+  const currentMemberProfile = useMemo(() => {
+    if (!user || !user.email) return null;
+    return members.find((m: Member) => m.contact?.toLowerCase() === user.email?.toLowerCase());
+  }, [user, members]);
+
   useEffect(() => {
     const root = document.documentElement;
     if (isDarkMode) root.classList.add('dark');
     else root.classList.remove('dark');
   }, [isDarkMode]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -1578,7 +1596,7 @@ export default function App() {
       onSnapshot(getColRef('songs'), s => setSongs(s.docs.map(d => ({ id: d.id, ...d.data() }) as Song))),
       onSnapshot(getColRef('schedules'), s => setSchedules(s.docs.map(d => ({ id: d.id, ...d.data() }) as Rota))),
       onSnapshot(getColRef('prayers'), s => setPrayers(s.docs.map(d => ({ id: d.id, ...d.data() }) as Prayer))),
-      onSnapshot(getColRef('tasks'), s => setTasks(s.docs.map(d => ({ id: d.id, ...d.data() }) as Task)))
+      onSnapshot(getColRef('tasks'), s => setTasks(s.docs.map(d => ({ id: d.id, ...d.data() }) as Task))))
     ];
 
     return () => unsubs.forEach(unsub => unsub());
@@ -1646,7 +1664,6 @@ export default function App() {
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto py-4 custom-scrollbar">
           <NavGroup title="Utama" isOpen={expandedMenus.utama} onToggle={() => toggleMenu('utama')}>
             <NavItem icon={LayoutDashboard} label="Dashboard" view="dashboard" isActive={currentView === 'dashboard'} />
-            <NavItem icon={UserCheck} label="Profil Saya" view="profile" isActive={currentView === 'profile'} />
             <NavItem icon={Trophy} label="Anggota & QR ID" view="members" isActive={currentView === 'members'} />
             <NavItem icon={DollarSign} label="Kas & Keuangan" view="finance" isActive={currentView === 'finance'} />
           </NavGroup>
@@ -1699,8 +1716,9 @@ export default function App() {
               <span className="text-sm font-black tracking-widest uppercase text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">KOMDA HUB</span>
             </button>
           </div>
-          <div className="flex items-center gap-4">
-            <span className={`text-xs px-3 py-1.5 rounded-lg font-bold border ${
+
+          <div className="flex items-center gap-3">
+            <span className={`text-xs px-3 py-1.5 rounded-lg font-bold border hidden sm:inline-block ${
               currentUserRole === 'Super Admin' 
                 ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30' 
                 : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20'
@@ -1711,7 +1729,47 @@ export default function App() {
             <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
               {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
-            <Badge color="emerald">Online</Badge>
+
+            {/* Menu Profil Kanan Atas dengan Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button 
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+              >
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
+                  {currentMemberProfile?.photoUrl ? (
+                    <img src={currentMemberProfile.photoUrl} alt="Profil" className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{currentMemberProfile?.name ? currentMemberProfile.name.substring(0, 2).toUpperCase() : user.email?.substring(0, 2).toUpperCase()}</span>
+                  )}
+                </div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 hidden md:inline-block max-w-[110px] truncate">
+                  {currentMemberProfile?.name || user.email?.split('@')[0]}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isProfileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{currentMemberProfile?.name || 'User'}</p>
+                    <p className="text-[10px] text-slate-500 font-mono truncate">{user.email}</p>
+                  </div>
+                  <button 
+                    onClick={() => { setCurrentView('profile'); setIsProfileDropdownOpen(false); }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-slate-800 flex items-center gap-2 transition-colors"
+                  >
+                    <UserCheck className="w-4 h-4 text-indigo-500" /> Profil Saya
+                  </button>
+                  <button 
+                    onClick={() => { handleLogout(); setIsProfileDropdownOpen(false); }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-2 transition-colors border-t border-slate-100 dark:border-slate-800 mt-1"
+                  >
+                    <LogOut className="w-4 h-4" /> Keluar (Logout)
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
