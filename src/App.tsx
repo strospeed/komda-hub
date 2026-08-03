@@ -324,15 +324,15 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
   );
 };
 
-const ProfileView = ({ user, members, onUpdateMember }: any) => {
+const ProfileView = ({ user, members, onUpdateMember, onAddMember }: any) => {
   const currentMember = useMemo(() => {
     if (!user || !user.email) return null;
     return members.find((m: Member) => m.contact?.toLowerCase() === user.email.toLowerCase());
   }, [user, members]);
 
   const [formData, setFormData] = useState({
-    name: currentMember?.name || '',
-    division: currentMember?.division || 'Youth',
+    name: currentMember?.name || user?.email?.split('@')[0] || '',
+    division: currentMember?.division || 'Pengurus Inti',
     contact: currentMember?.contact || user?.email || '',
     photoUrl: currentMember?.photoUrl || ''
   });
@@ -360,14 +360,27 @@ const ProfileView = ({ user, members, onUpdateMember }: any) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentMember) {
-      alert("Data profil anggota tidak ditemukan di database.");
-      return;
+    if (currentMember) {
+      await onUpdateMember(currentMember.id, formData);
+      setSuccessMsg('Profil berhasil diperbarui!');
+    } else {
+      // Auto-sync: Jika belum ada di koleksi members, buat baru secara otomatis
+      const isOwner = user?.email?.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
+      const newMemberData = {
+        name: formData.name.trim() || user?.email?.split('@')[0] || 'User',
+        role: isOwner ? 'Super Admin' : 'Anggota',
+        division: formData.division,
+        contact: (user?.email || '').toLowerCase(),
+        joinDate: new Date().toISOString(),
+        xp: 10,
+        qrId: `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`,
+        photoUrl: formData.photoUrl
+      };
+      await onAddMember(newMemberData);
+      setSuccessMsg('Profil berhasil dibuat & disimpan!');
     }
-    onUpdateMember(currentMember.id, formData);
-    setSuccessMsg('Profil berhasil diperbarui!');
     setTimeout(() => setSuccessMsg(''), 4000);
   };
 
@@ -405,18 +418,16 @@ const ProfileView = ({ user, members, onUpdateMember }: any) => {
             <Input label="Kontak (WhatsApp / Discord)" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} placeholder="@username atau 0812..." />
           </div>
 
-          {currentMember && (
-            <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
-              <div>
-                <span className="text-slate-400 block font-semibold">KOMDA ID & XP Poin</span>
-                <span className="font-mono font-bold text-indigo-500 text-sm">{currentMember.qrId || 'MEMBER-XXXXXX'}</span>
-              </div>
-              <div className="text-right">
-                <span className="text-slate-400 block font-semibold">Poin Keaktifan</span>
-                <span className="font-mono font-bold text-emerald-500 text-sm">{currentMember.xp || 0} XP</span>
-              </div>
+          <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
+            <div>
+              <span className="text-slate-400 block font-semibold">KOMDA ID & XP Poin</span>
+              <span className="font-mono font-bold text-indigo-500 text-sm">{currentMember?.qrId || 'MEMBER-NEW'}</span>
             </div>
-          )}
+            <div className="text-right">
+              <span className="text-slate-400 block font-semibold">Poin Keaktifan</span>
+              <span className="font-mono font-bold text-emerald-500 text-sm">{currentMember?.xp || 10} XP</span>
+            </div>
+          </div>
 
           {successMsg && (
             <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs rounded-xl font-semibold text-center">
@@ -1856,7 +1867,7 @@ export default function App() {
 
         <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full flex-1 relative z-10">
           {currentView === 'dashboard' && <DashboardView stats={dashboardStats} events={events} onNavigate={setCurrentView} />}
-          {currentView === 'profile' && <ProfileView user={user} members={members} onUpdateMember={(id: string, data: any) => handleUpdateDoc('members', id, data)} />}
+          {currentView === 'profile' && <ProfileView user={user} members={members} onUpdateMember={(id: string, data: any) => handleUpdateDoc('members', id, data)} onAddMember={(data: any) => handleAddDoc('members', data)} />}
           {currentView === 'members' && <MembersView members={members} onAdd={(d: any) => handleAddDoc('members', d)} onDelete={(id: string) => handleDeleteDoc('members', id)} onUpdateXP={(id: string, newXp: number) => handleUpdateDoc('members', id, { xp: newXp })} onUpdateMember={(id: string, data: any) => handleUpdateDoc('members', id, data)} currentUserRole={currentUserRole} />}
           {currentView === 'finance' && <FinanceView transactions={transactions} stats={dashboardStats} onAdd={(d: any) => handleAddDoc('transactions', d)} />}
           
