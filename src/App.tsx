@@ -20,7 +20,7 @@ import {
 import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
   LayoutDashboard, Plus, Trash2, Menu, X, ArrowRightLeft, Trophy, MessageSquare, Send,
-  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Printer, Image as ImageIcon, ChevronDown, ShieldAlert, LogOut, UserPlus, LogIn, PieChart
+  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Printer, Image as ImageIcon, ChevronDown, ShieldAlert, LogOut, UserPlus, LogIn, PieChart, UserCheck, Save
 } from 'lucide-react';
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
@@ -54,7 +54,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = 'komda-hub-main';
 
-export type View = 'dashboard' | 'members' | 'finance' | 'inventory_sound' | 'inventory_media' | 'inventory_property' | 'borrowing' | 'calendar' | 'discord_webhook' | 'songs' | 'rota' | 'prayers' | 'tasks';
+export type View = 'dashboard' | 'members' | 'finance' | 'inventory_sound' | 'inventory_media' | 'inventory_property' | 'borrowing' | 'calendar' | 'discord_webhook' | 'songs' | 'rota' | 'prayers' | 'tasks' | 'profile';
 
 interface Member { id: string; name: string; role: string; division: string; contact: string; joinDate: string; xp: number; qrId?: string; photoUrl?: string; }
 export interface Transaction { id: string; type: 'income' | 'expense'; amount: number; description: string; date: string; }
@@ -140,13 +140,9 @@ const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) =>
 
     try {
       if (isRegister) {
-        // 1. Buat akun di Firebase Authentication
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        
-        // 2. Cek apakah email yang mendaftar adalah owner
         const isOwner = email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
 
-        // 3. Otomatis daftarkan / masukkan data ke menu Anggota (Firestore)
         const memberRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
         await addDoc(memberRef, {
           name: name.trim() || email.split('@')[0],
@@ -324,6 +320,117 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             </div>
           </div>
         </div>
+      </Card>
+    </div>
+  );
+};
+
+const ProfileView = ({ user, members, onUpdateMember }: any) => {
+  const currentMember = useMemo(() => {
+    if (!user || !user.email) return null;
+    return members.find((m: Member) => m.contact?.toLowerCase() === user.email.toLowerCase());
+  }, [user, members]);
+
+  const [formData, setFormData] = useState({
+    name: currentMember?.name || '',
+    division: currentMember?.division || 'Youth',
+    contact: currentMember?.contact || user?.email || '',
+    photoUrl: currentMember?.photoUrl || ''
+  });
+  const [successMsg, setSuccessMsg] = useState('');
+
+  useEffect(() => {
+    if (currentMember) {
+      setFormData({
+        name: currentMember.name || '',
+        division: currentMember.division || 'Youth',
+        contact: currentMember.contact || user?.email || '',
+        photoUrl: currentMember.photoUrl || ''
+      });
+    }
+  }, [currentMember, user]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, photoUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentMember) {
+      alert("Data profil anggota tidak ditemukan di database.");
+      return;
+    }
+    onUpdateMember(currentMember.id, formData);
+    setSuccessMsg('Profil berhasil diperbarui!');
+    setTimeout(() => setSuccessMsg(''), 4000);
+  };
+
+  return (
+    <div className="space-y-6 max-w-2xl mx-auto animate-in fade-in duration-300">
+      <div>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+          <UserCheck className="w-8 h-8 text-indigo-500" /> Profil Saya
+        </h2>
+        <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 font-medium">Kelola informasi pribadi, foto, dan data pelayanan Anda.</p>
+      </div>
+
+      <Card className="border-indigo-500/30">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border-2 border-indigo-500 shadow-md flex items-center justify-center flex-shrink-0">
+              {formData.photoUrl ? (
+                <img src={formData.photoUrl} alt="Profil" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-2xl font-black text-indigo-600 uppercase">{formData.name ? formData.name.substring(0, 2) : 'US'}</span>
+              )}
+            </div>
+
+            <div className="w-full text-center sm:text-left">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Ganti Foto Profil</label>
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-500/10 dark:file:text-indigo-400 hover:file:bg-indigo-100 transition-all cursor-pointer" />
+              <p className="text-[11px] text-slate-400 mt-1">Format gambar: JPG, PNG (Maks disarankan ukuran kecil).</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Input label="Nama Lengkap" required value={formData.name} onChange={(e:any) => setFormData({...formData, name: e.target.value})} />
+            <Input label="Email Akun (Login)" disabled value={user?.email || ''} />
+            <Input label="Divisi / Departemen Pelayanan" value={formData.division} onChange={(e:any) => setFormData({...formData, division: e.target.value})} placeholder="Cth: Puji-Pujian / Multimedia" />
+            <Input label="Kontak (WhatsApp / Discord)" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} placeholder="@username atau 0812..." />
+          </div>
+
+          {currentMember && (
+            <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
+              <div>
+                <span className="text-slate-400 block font-semibold">KOMDA ID & XP Poin</span>
+                <span className="font-mono font-bold text-indigo-500 text-sm">{currentMember.qrId || 'MEMBER-XXXXXX'}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-400 block font-semibold">Poin Keaktifan</span>
+                <span className="font-mono font-bold text-emerald-500 text-sm">{currentMember.xp || 0} XP</span>
+              </div>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs rounded-xl font-semibold text-center">
+              {successMsg}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="submit">
+              <Save className="w-4 h-4" /> Simpan Perubahan Profil
+            </Button>
+          </div>
+        </form>
       </Card>
     </div>
   );
@@ -1417,7 +1524,6 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  // Menentukan role secara otomatis berdasarkan email yang login (Owner vs Anggota)
   const currentUserRole = useMemo(() => {
     if (!user || !user.email) return 'Anggota';
     return user.email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase() ? 'Super Admin' : 'Anggota';
@@ -1540,6 +1646,7 @@ export default function App() {
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto py-4 custom-scrollbar">
           <NavGroup title="Utama" isOpen={expandedMenus.utama} onToggle={() => toggleMenu('utama')}>
             <NavItem icon={LayoutDashboard} label="Dashboard" view="dashboard" isActive={currentView === 'dashboard'} />
+            <NavItem icon={UserCheck} label="Profil Saya" view="profile" isActive={currentView === 'profile'} />
             <NavItem icon={Trophy} label="Anggota & QR ID" view="members" isActive={currentView === 'members'} />
             <NavItem icon={DollarSign} label="Kas & Keuangan" view="finance" isActive={currentView === 'finance'} />
           </NavGroup>
@@ -1610,6 +1717,7 @@ export default function App() {
 
         <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full flex-1 relative z-10">
           {currentView === 'dashboard' && <DashboardView stats={dashboardStats} events={events} onNavigate={setCurrentView} />}
+          {currentView === 'profile' && <ProfileView user={user} members={members} onUpdateMember={(id: string, data: any) => handleUpdateDoc('members', id, data)} />}
           {currentView === 'members' && <MembersView members={members} onAdd={(d: any) => handleAddDoc('members', d)} onDelete={(id: string) => handleDeleteDoc('members', id)} onUpdateXP={(id: string, newXp: number) => handleUpdateDoc('members', id, { xp: newXp })} currentUserRole={currentUserRole} />}
           {currentView === 'finance' && <FinanceView transactions={transactions} stats={dashboardStats} onAdd={(d: any) => handleAddDoc('transactions', d)} />}
           
