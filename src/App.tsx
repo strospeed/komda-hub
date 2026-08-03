@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
-  signInAnonymously,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
   User,
 } from 'firebase/auth';
@@ -18,7 +20,7 @@ import {
 import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
   LayoutDashboard, Plus, Trash2, Menu, X, ArrowRightLeft, Trophy, MessageSquare, Send,
-  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, ExternalLink, Mail, PieChart, Printer, Image as ImageIcon, ChevronDown, ShieldAlert
+  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, ExternalLink, Mail, PieChart, Printer, Image as ImageIcon, ChevronDown, ShieldAlert, LogOut, Lock, UserPlus, LogIn
 } from 'lucide-react';
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
@@ -118,6 +120,101 @@ export const Badge = ({ children, color = 'indigo' }: { children: React.ReactNod
     purple: 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border-purple-200 dark:border-purple-500/20',
   };
   return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[color] || styles.indigo}`}>{children}</span>;
+};
+
+const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) => {
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      if (isRegister) {
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        onAuthSuccess(userCred.user);
+      } else {
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        onAuthSuccess(userCred.user);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Autentikasi gagal. Periksa kembali email dan password Anda.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-950 text-slate-100 relative overflow-hidden">
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div className="max-w-md w-full bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl relative z-10 animate-in fade-in zoom-in-95 duration-300">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg bg-white mx-auto flex items-center justify-center mb-4 border border-slate-700">
+            <img src={LOGO_URL} alt="Logo" className="w-full h-full object-cover" />
+          </div>
+          <h1 className="text-2xl font-black tracking-wider text-white">KOMDA HUB</h1>
+          <p className="text-xs text-indigo-400 uppercase font-bold tracking-widest mt-1">GKJ Slogohimo Engine</p>
+        </div>
+
+        <div className="flex bg-slate-950 p-1 rounded-xl mb-6 border border-slate-800">
+          <button 
+            type="button" 
+            onClick={() => { setIsRegister(false); setError(''); }} 
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${!isRegister ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+          >
+            Masuk (Login)
+          </button>
+          <button 
+            type="button" 
+            onClick={() => { setIsRegister(true); setError(''); }} 
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${isRegister ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+          >
+            Buat Akun (Register)
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input 
+            label="Email Gereja / Pribadi" 
+            type="email" 
+            required 
+            value={email} 
+            onChange={(e: any) => setEmail(e.target.value)} 
+            placeholder="nama@email.com" 
+          />
+          <Input 
+            label="Password" 
+            type="password" 
+            required 
+            value={password} 
+            onChange={(e: any) => setPassword(e.target.value)} 
+            placeholder="••••••••" 
+          />
+
+          {error && (
+            <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl font-medium">
+              {error}
+            </div>
+          )}
+
+          <Button type="submit" className="w-full py-3 mt-2" disabled={loading}>
+            {loading ? 'Memproses...' : (isRegister ? <><UserPlus className="w-4 h-4"/> Buat Akun Baru</> : <><LogIn className="w-4 h-4"/> Masuk ke Sistem</>)}
+          </Button>
+        </form>
+
+        <p className="text-center text-[11px] text-slate-500 mt-6">
+          Sistem Manajemen Terpadu Pemuda & Remaja GKJ Slogohimo
+        </p>
+      </div>
+    </div>
+  );
 };
 
 const DashboardView = ({ stats, events, onNavigate }: any) => {
@@ -839,6 +936,26 @@ const CalendarView = ({ events, onAdd }: any) => {
     return eventDate < today;
   };
 
+  const handleSendEventToDiscord = async (evt: any) => {
+    try {
+      const discordMsg = `📅 **AGENDA PELAYANAN KOMDA HUB**\n\n📌 **Acara:** ${evt.title}\n🏷️ **Jenis:** ${evt.type}\n📍 **Lokasi:** ${evt.location}\n⏰ **Waktu:** ${evt.date} (${evt.time})`;
+      
+      const response = await fetch(PERMANENT_DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: discordMsg })
+      });
+
+      if (response.ok || response.status === 204) {
+        alert('Agenda acara berhasil dikirim ke Discord!');
+      } else {
+        alert('Gagal mengirim ke Discord.');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan jaringan.');
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
@@ -864,16 +981,26 @@ const CalendarView = ({ events, onAdd }: any) => {
         {events.map((e: any) => {
           const past = isEventPast(e.date);
           return (
-            <Card key={e.id} className={past ? 'opacity-75 border-slate-300 dark:border-slate-800' : ''}>
-              <div className="flex justify-between items-center mb-2">
-                <div className="flex items-center gap-2">
-                  <Badge color={past ? 'slate' : 'cyan'}>{e.type}</Badge>
-                  {past && <Badge color="rose">Selesai</Badge>}
+            <Card key={e.id} className={`${past ? 'opacity-75 border-slate-300 dark:border-slate-800' : ''} flex flex-col justify-between`}>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2">
+                    <Badge color={past ? 'slate' : 'cyan'}>{e.type}</Badge>
+                    {past && <Badge color="rose">Selesai</Badge>}
+                  </div>
+                  <span className="font-mono text-xs text-slate-500">{e.date}</span>
                 </div>
-                <span className="font-mono text-xs text-slate-500">{e.date}</span>
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">{e.title}</h3>
+                <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-2">📍 {e.location} • ⏰ {e.time}</p>
               </div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">{e.title}</h3>
-              <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-2">📍 {e.location} • ⏰ {e.time}</p>
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <button 
+                  onClick={() => handleSendEventToDiscord(e)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs bg-[#5865F2]/10 text-[#5865F2] hover:bg-[#5865F2]/20 transition-colors border border-[#5865F2]/20"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" /> Kirim ke Discord
+                </button>
+              </div>
             </Card>
           );
         })}
@@ -1287,9 +1414,10 @@ export default function App() {
   }, [isDarkMode]);
 
   useEffect(() => {
-    const initAuth = async () => { try { await signInAnonymously(auth); } catch (error) {} };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => { setUser(currentUser); setLoading(false); });
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
     return () => unsubscribe();
   }, []);
 
@@ -1311,6 +1439,14 @@ export default function App() {
 
     return () => unsubs.forEach(unsub => unsub());
   }, [user]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleAddDoc = async (colName: string, data: any) => { if (user) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', colName), data); };
   const handleDeleteDoc = async (colName: string, docId: string) => { 
@@ -1334,6 +1470,10 @@ export default function App() {
       <p className="text-sm font-semibold tracking-wider">Loading KOMDA HUB Engine...</p>
     </div>
   );
+
+  if (!user) {
+    return <AuthView onAuthSuccess={(u) => setUser(u)} />;
+  }
 
   const NavItem = ({ icon: Icon, label, view, isActive, colorClass = "text-slate-500 dark:text-slate-400" }: any) => (
     <button onClick={() => { setCurrentView(view); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all duration-200 text-sm font-medium ${isActive ? 'bg-indigo-600 text-white shadow-lg' : `${colorClass} hover:bg-slate-100 dark:hover:bg-slate-800/60`}`}>
@@ -1385,6 +1525,15 @@ export default function App() {
             <NavItem icon={MessageSquare} label="Discord Broadcast" view="discord_webhook" isActive={currentView === 'discord_webhook'} />
           </NavGroup>
         </nav>
+
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-[11px] text-slate-500 truncate font-mono" title={user.email || ''}>{user.email}</span>
+          </div>
+          <button onClick={handleLogout} className="w-full py-2 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center justify-center gap-2 transition-colors border border-rose-500/20">
+            <LogOut className="w-3.5 h-3.5" /> Keluar (Logout)
+          </button>
+        </div>
       </aside>
 
       <main 
