@@ -16,6 +16,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  setDoc,
 } from 'firebase/firestore';
 import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
@@ -137,6 +138,20 @@ const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) =>
     try {
       if (isRegister) {
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Otomatis daftarkan akun baru ke database anggota dengan role "Anggota"
+        const memberRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
+        await addDoc(memberRef, {
+          name: email.split('@')[0], // Menggunakan nama depan email sebagai nama awal
+          role: 'Anggota',
+          division: 'Youth',
+          contact: email,
+          joinDate: new Date().toISOString(),
+          xp: 10,
+          qrId: `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`,
+          photoUrl: ''
+        });
+
         onAuthSuccess(userCred.user);
       } else {
         const userCred = await signInWithEmailAndPassword(auth, email, password);
