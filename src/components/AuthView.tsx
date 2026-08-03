@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { UserPlus, LogIn } from 'lucide-react';
-import { auth, db } from '../App'; // atau import auth & db dari root
+import { auth, db } from '../App';
 import { LOGO_URL, OWNER_EMAIL, appId } from '../constants';
-import { Button, Input } from './Button'; // sesuaikan path impor
+import { Button } from './Button';
+import { Input } from './FormUI'; // Diimpor dari FormUI, bukan Button
 
 export default function AuthView({ onAuthSuccess }: { onAuthSuccess: (user: any) => void }) {
   const [isRegister, setIsRegister] = useState(false);
