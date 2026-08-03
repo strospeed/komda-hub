@@ -13,7 +13,7 @@ import {
   collection,
   onSnapshot,
   addDoc,
-  updateDoc,
+  setDoc,
   deleteDoc,
   doc,
 } from 'firebase/firestore';
@@ -32,7 +32,7 @@ export const CHURCH_TIKTOK_URL = 'https://www.tiktok.com/@komdagkjslogohimo';
 export const CHURCH_YT_URL = 'https://www.youtube.com/@GKJSLOGOHIMO';
 export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
 
-const OWNER_EMAIL = 'mariodimasputra01@gmail.com'; 
+const OWNER_EMAIL = 'admin@gkjslogohimo.web.id'; 
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
 
@@ -142,8 +142,8 @@ const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) =>
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
         const isOwner = email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
 
-        const memberRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
-        await addDoc(memberRef, {
+        const memberRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', userCred.user.uid);
+        await setDoc(memberRef, {
           name: name.trim() || email.split('@')[0],
           role: isOwner ? 'Super Admin' : 'Anggota',
           division: isOwner ? 'Pengurus Inti' : 'Youth',
@@ -324,15 +324,15 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
   );
 };
 
-const ProfileView = ({ user, members, onUpdateMember, onAddMember }: any) => {
+const ProfileView = ({ user, members, onSaveProfile }: any) => {
   const currentMember = useMemo(() => {
-    if (!user || !user.email) return null;
-    return members.find((m: Member) => m.contact?.toLowerCase() === user.email.toLowerCase());
+    if (!user) return null;
+    return members.find((m: Member) => m.id === user.uid || m.contact?.toLowerCase() === user.email?.toLowerCase());
   }, [user, members]);
 
   const [formData, setFormData] = useState({
     name: currentMember?.name || user?.email?.split('@')[0] || '',
-    division: currentMember?.division || 'Pengurus Inti',
+    division: currentMember?.division || (user?.email?.trim().toLowerCase() === OWNER_EMAIL.toLowerCase() ? 'Pengurus Inti' : 'Youth'),
     contact: currentMember?.contact || user?.email || '',
     photoUrl: currentMember?.photoUrl || ''
   });
@@ -362,25 +362,23 @@ const ProfileView = ({ user, members, onUpdateMember, onAddMember }: any) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentMember) {
-      await onUpdateMember(currentMember.id, formData);
-      setSuccessMsg('Profil berhasil diperbarui!');
-    } else {
-      // Auto-sync: Jika belum ada di koleksi members, buat baru secara otomatis
-      const isOwner = user?.email?.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
-      const newMemberData = {
-        name: formData.name.trim() || user?.email?.split('@')[0] || 'User',
-        role: isOwner ? 'Super Admin' : 'Anggota',
-        division: formData.division,
-        contact: (user?.email || '').toLowerCase(),
-        joinDate: new Date().toISOString(),
-        xp: 10,
-        qrId: `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`,
-        photoUrl: formData.photoUrl
-      };
-      await onAddMember(newMemberData);
-      setSuccessMsg('Profil berhasil dibuat & disimpan!');
-    }
+    if (!user) return;
+
+    const isOwner = user.email?.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
+    const payload = {
+      name: formData.name.trim() || user.email?.split('@')[0] || 'User',
+      role: currentMember?.role || (isOwner ? 'Super Admin' : 'Anggota'),
+      division: formData.division,
+      contact: (formData.contact || user.email || '').toLowerCase(),
+      joinDate: currentMember?.joinDate || new Date().toISOString(),
+      xp: currentMember?.xp ?? 10,
+      qrId: currentMember?.qrId || `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`,
+      photoUrl: formData.photoUrl
+    };
+
+    const targetId = currentMember ? currentMember.id : user.uid;
+    await onSaveProfile(targetId, payload);
+    setSuccessMsg('Profil berhasil disimpan tanpa kendala!');
     setTimeout(() => setSuccessMsg(''), 4000);
   };
 
@@ -425,7 +423,7 @@ const ProfileView = ({ user, members, onUpdateMember, onAddMember }: any) => {
             </div>
             <div className="text-right">
               <span className="text-slate-400 block font-semibold">Poin Keaktifan</span>
-              <span className="font-mono font-bold text-emerald-500 text-sm">{currentMember?.xp || 10} XP</span>
+              <span className="font-mono font-bold text-emerald-500 text-sm">{currentMember?.xp ?? 10} XP</span>
             </div>
           </div>
 
@@ -1628,7 +1626,7 @@ export default function App() {
     
     if (emailLower === OWNER_EMAIL.toLowerCase()) return 'Super Admin';
     
-    const matchedMember = members.find(m => m.contact?.toLowerCase() === emailLower);
+    const matchedMember = members.find(m => m.id === user.uid || m.contact?.toLowerCase() === emailLower);
     if (matchedMember && matchedMember.role === 'Super Admin') {
       return 'Super Admin';
     }
@@ -1648,8 +1646,8 @@ export default function App() {
   };
 
   const currentMemberProfile = useMemo(() => {
-    if (!user || !user.email) return null;
-    return members.find((m: Member) => m.contact?.toLowerCase() === user.email?.toLowerCase());
+    if (!user) return null;
+    return members.find((m: Member) => m.id === user.uid || m.contact?.toLowerCase() === user.email?.toLowerCase());
   }, [user, members]);
 
   useEffect(() => {
@@ -1712,6 +1710,12 @@ export default function App() {
     if (user) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', colName, docId)); 
   };
   const handleUpdateDoc = async (colName: string, docId: string, data: any) => { if (user) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', colName, docId), data); };
+
+  const handleSaveProfile = async (targetId: string, profileData: any) => {
+    if (!user) return;
+    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', targetId);
+    await setDoc(docRef, profileData, { merge: true });
+  };
 
   const dashboardStats = useMemo(() => {
     const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount || 0), 0);
@@ -1867,7 +1871,7 @@ export default function App() {
 
         <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full flex-1 relative z-10">
           {currentView === 'dashboard' && <DashboardView stats={dashboardStats} events={events} onNavigate={setCurrentView} />}
-          {currentView === 'profile' && <ProfileView user={user} members={members} onUpdateMember={(id: string, data: any) => handleUpdateDoc('members', id, data)} onAddMember={(data: any) => handleAddDoc('members', data)} />}
+          {currentView === 'profile' && <ProfileView user={user} members={members} onSaveProfile={handleSaveProfile} />}
           {currentView === 'members' && <MembersView members={members} onAdd={(d: any) => handleAddDoc('members', d)} onDelete={(id: string) => handleDeleteDoc('members', id)} onUpdateXP={(id: string, newXp: number) => handleUpdateDoc('members', id, { xp: newXp })} onUpdateMember={(id: string, data: any) => handleUpdateDoc('members', id, data)} currentUserRole={currentUserRole} />}
           {currentView === 'finance' && <FinanceView transactions={transactions} stats={dashboardStats} onAdd={(d: any) => handleAddDoc('transactions', d)} />}
           
