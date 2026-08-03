@@ -507,7 +507,6 @@ const CalendarView = ({ events, onAdd, onUpdateXP, members }: any) => {
   const [activeEventQR, setActiveEventQR] = useState<EventItem | null>(null);
   const [isEventScanning, setIsEventScanning] = useState(false);
 
-  // Scanner khusus Check-in Acara Agenda Gereja
   useEffect(() => {
     if (!isEventScanning) return;
     // @ts-ignore
@@ -518,7 +517,6 @@ const CalendarView = ({ events, onAdd, onUpdateXP, members }: any) => {
         (decodedText: string) => {
           scanner.clear();
           setIsEventScanning(false);
-          // Format QR Agenda: EVENT_CHECKIN_[ID_MEMBER]
           if (decodedText.startsWith("MEMBER-")) {
             const foundMember = members.find((m: Member) => m.qrId === decodedText);
             if (foundMember) {
@@ -542,7 +540,7 @@ const CalendarView = ({ events, onAdd, onUpdateXP, members }: any) => {
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
           <CalendarIcon className="w-8 h-8 text-cyan-500" /> Agenda Gereja & QR Check-in
-        </h4>
+        </h2>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => setIsEventScanning(true)}>
             <ScanLine className="w-4 h-4" /> Scan QR Check-in Peserta
