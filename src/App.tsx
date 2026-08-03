@@ -33,7 +33,7 @@ export const CHURCH_YT_URL = 'https://www.youtube.com/@GKJSLOGOHIMO';
 export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
 
 // Tuliskan email owner / admin utama di sini:
-const OWNER_EMAIL = 'mariodimasputra01@gmail.com'; // Ganti dengan email owner yang sebenarnya
+const OWNER_EMAIL = 'admin@gkjslogohimo.web.id'; // Ganti dengan email owner yang sebenarnya
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
 
@@ -127,6 +127,7 @@ export const Badge = ({ children, color = 'indigo' }: { children: React.ReactNod
 
 const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) => {
   const [isRegister, setIsRegister] = useState(false);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -139,15 +140,16 @@ const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) =>
 
     try {
       if (isRegister) {
+        // 1. Buat akun di Firebase Authentication
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
         
-        // Cek apakah email yang mendaftar adalah owner
+        // 2. Cek apakah email yang mendaftar adalah owner
         const isOwner = email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
 
-        // Otomatis daftarkan akun baru ke koleksi members
+        // 3. Otomatis daftarkan / masukkan data ke menu Anggota (Firestore)
         const memberRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
         await addDoc(memberRef, {
-          name: email.split('@')[0],
+          name: name.trim() || email.split('@')[0],
           role: isOwner ? 'Super Admin' : 'Anggota',
           division: isOwner ? 'Pengurus Inti' : 'Youth',
           contact: email,
@@ -201,6 +203,17 @@ const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) =>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {isRegister && (
+            <Input 
+              label="Nama Lengkap" 
+              type="text" 
+              required={isRegister}
+              value={name} 
+              onChange={(e: any) => setName(e.target.value)} 
+              placeholder="Nama Lengkap Anda" 
+            />
+          )}
+
           <Input 
             label="Email Gereja / Pribadi" 
             type="email" 
@@ -225,7 +238,7 @@ const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) =>
           )}
 
           <Button type="submit" className="w-full py-3 mt-2" disabled={loading}>
-            {loading ? 'Memproses...' : (isRegister ? <><UserPlus className="w-4 h-4"/> Buat Akun Baru</> : <><LogIn className="w-4 h-4"/> Masuk ke Sistem</>)}
+            {loading ? 'Memproses...' : (isRegister ? <><UserPlus className="w-4 h-4"/> Buat Akun & Daftar Anggota</> : <><LogIn className="w-4 h-4"/> Masuk ke Sistem</>)}
           </Button>
         </form>
 
@@ -1580,7 +1593,6 @@ export default function App() {
             </button>
           </div>
           <div className="flex items-center gap-4">
-            {/* Indikator Role otomatis berdasarkan email */}
             <span className={`text-xs px-3 py-1.5 rounded-lg font-bold border ${
               currentUserRole === 'Super Admin' 
                 ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30' 
