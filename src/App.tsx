@@ -421,9 +421,8 @@ const ProfileView = ({ user, members, onSaveProfile }: any) => {
       photoUrl: formData.photoUrl 
     };
 
-    const targetId = currentMember ? currentMember.id : user.uid;
-    await onSaveProfile(targetId, payload);
-    setSuccessMsg('Profil berhasil disimpan tanpa kendala!');
+    await onSaveProfile(user.uid, payload);
+    setSuccessMsg('Profil berhasil disimpan & disinkronkan ke menu Anggota!');
     setTimeout(() => setSuccessMsg(''), 4000);
   };
 
@@ -1765,8 +1764,12 @@ export default function App() {
 
   const handleSaveProfile = async (targetId: string, profileData: any) => {
     if (!user) return;
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', targetId);
-    await setDoc(docRef, profileData, { merge: true });
+    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', user.uid);
+    const payload = {
+      ...profileData,
+      contact: (profileData.contact || user.email || '').toLowerCase()
+    };
+    await setDoc(docRef, payload, { merge: true });
   };
 
   const dashboardStats = useMemo(() => {
