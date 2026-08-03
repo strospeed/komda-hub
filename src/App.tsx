@@ -21,7 +21,7 @@ import {
 import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
   LayoutDashboard, Plus, Trash2, Menu, X, ArrowRightLeft, Trophy, MessageSquare, Send,
-  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Printer, Image as ImageIcon, ChevronDown, ShieldAlert, LogOut, UserPlus, LogIn, PieChart, UserCheck, Save, Edit2
+  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Printer, Image as ImageIcon, ChevronDown, ShieldAlert, LogOut, UserCheck, Save, Edit2, FileText, Monitor, CheckSquare, Vote, BookOpen, ExternalLink, Award, AlertTriangle
 } from 'lucide-react';
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
@@ -54,18 +54,21 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = 'komda-hub-main';
 
-export type View = 'dashboard' | 'members' | 'finance' | 'inventory_sound' | 'inventory_media' | 'inventory_property' | 'borrowing' | 'calendar' | 'discord_webhook' | 'songs' | 'rota' | 'prayers' | 'tasks' | 'profile';
+export type View = 'dashboard' | 'members' | 'finance' | 'inventory_sound' | 'inventory_media' | 'inventory_property' | 'borrowing' | 'calendar' | 'discord_webhook' | 'songs' | 'rota' | 'prayers' | 'tasks' | 'profile' | 'liturgy' | 'polls' | 'guests';
 
 interface Member { id: string; name: string; role: string; division: string; contact: string; joinDate: string; xp: number; qrId?: string; photoUrl?: string; }
-export interface Transaction { id: string; type: 'income' | 'expense'; amount: number; description: string; date: string; }
+export interface Transaction { id: string; type: 'income' | 'expense'; amount: number; description: string; date: string; category?: string; receiptUrl?: string; }
 type InventoryCategory = 'Sound System' | 'Multimedia' | 'Properti';
 interface InventoryItem { id: string; name: string; category: InventoryCategory; condition: 'Good' | 'Needs Repair' | 'Broken'; quantity: number; location: string; qrCodeId?: string; }
-export interface BorrowingRequest { id: string; itemId: string; itemName: string; borrowerName: string; startDate: string; endDate: string; status: 'Pending' | 'Approved' | 'Rejected' | 'Returned'; purpose?: string; }
+export interface BorrowingRequest { id: string; itemId: string; itemName: string; borrowerName: string; startDate: string; endDate: string; status: 'Pending' | 'Approved' | 'Rejected' | 'Returned'; purpose?: string; checkInCondition?: string; checkOutCondition?: string; }
 export interface EventItem { id: string; title: string; date: string; time: string; description: string; type: string; location: string; }
 export interface Song { id: string; title: string; key: string; lyrics: string; }
 export interface Rota { id: string; date: string; event: string; wl: string; musicians: string; multimedia: string; }
 export interface Prayer { id: string; author: string; content: string; date: string; prayCount: number; }
 export interface Task { id: string; title: string; assignee: string; status: 'To Do' | 'In Progress' | 'Done'; event: string; }
+export interface LiturgyItem { id: string; title: string; date: string; theme: string; preacher: string; wl: string; items: { order: number; time: string; activity: string; leader: string; songTitle?: string; }[]; }
+export interface PollItem { id: string; question: string; options: { text: string; votes: number; }[]; voters: string[]; isOpen: boolean; }
+export interface GuestItem { id: string; name: string; contact: string; churchOrigin: string; visitDate: string; notes: string; }
 
 const compressImage = (file: File, maxWidth = 250, quality = 0.6): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -178,7 +181,6 @@ const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) =>
       const email = user.email || '';
       const isOwner = email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
 
-      // Cek atau daftarkan otomatis ke koleksi members Firestore
       const memberRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', user.uid);
       await setDoc(memberRef, {
         name: user.displayName || email.split('@')[0],
@@ -289,7 +291,7 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
         <Card onClick={() => onNavigate('finance')} className="border-indigo-500/30 lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <PieChart className="w-6 h-6 text-indigo-500" />
+              <LayoutDashboard className="w-6 h-6 text-indigo-500" />
               <h3 className="font-bold text-slate-900 dark:text-white text-base">Diagram Arus Keuangan Kas</h3>
             </div>
             <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Klik untuk detail →</span>
@@ -377,7 +379,6 @@ const ProfileView = ({ user, members, onSaveProfile }: any) => {
         setFormData(prev => ({ ...prev, photoUrl: compressedBase64 }));
       } catch (err) {
         console.error("Gagal memproses gambar:", err);
-        alert("Terjadi kesalahan saat memproses gambar.");
       } finally {
         setIsCompressing(false);
       }
@@ -405,13 +406,21 @@ const ProfileView = ({ user, members, onSaveProfile }: any) => {
     setTimeout(() => setSuccessMsg(''), 4000);
   };
 
+  // Kalkulasi Badge Pencapaian (Achievements) Berdasarkan XP & Riwayat
+  const userXP = currentMember?.xp || 10;
+  const achievements = [
+    { title: 'Veteran Pelayanan', desc: 'Mencapai total 100+ XP', unlocked: userXP >= 100, icon: '⭐' },
+    { title: 'Anggota Aktif', desc: 'Mencapai total 50+ XP', unlocked: userXP >= 50, icon: '🔥' },
+    { title: 'Pendatang Baru', desc: 'Bergabung di KOMDA HUB', unlocked: true, icon: '🌱' },
+  ];
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto animate-in fade-in duration-300">
       <div>
         <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-          <UserCheck className="w-8 h-8 text-indigo-500" /> Profil Saya
+          <UserCheck className="w-8 h-8 text-indigo-500" /> Profil & Pencapaian
         </h2>
-        <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 font-medium">Kelola informasi pribadi, foto, dan data pelayanan Anda.</p>
+        <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 font-medium">Kelola informasi pribadi, foto, dan lihat lencana pencapaian Anda.</p>
       </div>
 
       <Card className="border-indigo-500/30">
@@ -430,7 +439,6 @@ const ProfileView = ({ user, members, onSaveProfile }: any) => {
             <div className="w-full text-center sm:text-left">
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Ganti Foto Profil</label>
               <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isCompressing} className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-500/10 dark:file:text-indigo-400 hover:file:bg-indigo-100 transition-all cursor-pointer" />
-              <p className="text-[11px] text-slate-400 mt-1">Format gambar: JPG, PNG. Gambar akan otomatis dikompres.</p>
             </div>
           </div>
 
@@ -448,7 +456,23 @@ const ProfileView = ({ user, members, onSaveProfile }: any) => {
             </div>
             <div className="text-right">
               <span className="text-slate-400 block font-semibold">Poin Keaktifan</span>
-              <span className="font-mono font-bold text-emerald-500 text-sm">{currentMember?.xp ?? 10} XP</span>
+              <span className="font-mono font-bold text-emerald-500 text-sm">{userXP} XP</span>
+            </div>
+          </div>
+
+          {/* Lencana Pencapaian */}
+          <div className="pt-2">
+            <h3 className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Award className="w-4 h-4 text-amber-500" /> Lencana / Badge Pencapaian
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {achievements.map((ach, idx) => (
+                <div key={idx} className={`p-3 rounded-xl border text-center flex flex-col items-center justify-center ${ach.unlocked ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 opacity-50'}`}>
+                  <span className="text-2xl mb-1">{ach.icon}</span>
+                  <p className="font-bold text-xs">{ach.title}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">{ach.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -520,7 +544,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
         const compressedBase64 = await compressImage(file);
         setFormData(prev => ({ ...prev, photoUrl: compressedBase64 }));
       } catch (err) {
-        console.error("Gagal memproses gambar:", err);
+        console.error(err);
       } finally {
         setIsCompressing(false);
       }
@@ -530,36 +554,13 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSuperAdmin) {
-      alert("Akses ditolak! Hanya Super Admin yang dapat menambah anggota / mengatur hak akses.");
+      alert("Akses ditolak! Hanya Super Admin.");
       return;
     }
     const qrId = `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`;
     onAdd({ ...formData, joinDate: new Date().toISOString(), xp: Number(formData.xp) || 0, qrId });
     setIsAdding(false);
     setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50, photoUrl: '' });
-  };
-
-  const handleOpenEdit = (member: Member) => {
-    if (!isSuperAdmin) return;
-    setEditingMember(member);
-    setEditForm({ role: member.role || 'Anggota', division: member.division || 'Youth' });
-  };
-
-  const handleSaveEdit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingMember) return;
-    onUpdateMember(editingMember.id, editForm);
-    setEditingMember(null);
-  };
-
-  const handleDownloadQR = (name: string, qrId: string) => {
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/#member=${qrId}`)}`;
-    const link = document.createElement('a');
-    link.href = qrUrl;
-    link.download = `QR-Member-${name.replace(/\s+/g, '_')}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const sortedMembers = useMemo(() => [...members].sort((a, b) => (b.xp || 0) - (a.xp || 0)), [members]);
@@ -570,9 +571,9 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-amber-500 dark:text-amber-400" /> Anggota & Kartu ID
+            <Trophy className="w-8 h-8 text-amber-500 dark:text-amber-400" /> Papan Peringkat & Anggota
           </h2>
-          <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 font-medium">Manajemen anggota, XP pelayanan, dan ID QR Code (Absensi).</p>
+          <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 font-medium">Leaderboard keaktifan anggota berdasarkan perolehan XP pelayanan.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => setIsScanning(true)}>
@@ -584,54 +585,17 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
         </div>
       </div>
 
-      {!isSuperAdmin && (
-        <div className="bg-amber-500/10 border border-amber-500/30 p-3.5 rounded-xl flex items-center gap-3 text-amber-600 dark:text-amber-400 text-xs font-semibold">
-          <ShieldAlert className="w-5 h-5 flex-shrink-0" />
-          <span>Anda login sebagai <b>{currentUserRole}</b>. Penambahan anggota dan pengaturan role dikunci khusus untuk Super Admin.</span>
-        </div>
-      )}
-
       {editingMember && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl relative border border-slate-200 dark:border-slate-800">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Edit Role Anggota</h3>
-              <button onClick={() => setEditingMember(null)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
+              <button onClick={() => setEditingMember(null)} className="text-slate-400"><X className="w-6 h-6"/></button>
             </div>
-            
-            <form onSubmit={handleSaveEdit} className="space-y-4">
-              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 mb-2">
-                <p className="text-xs text-slate-500 font-semibold">Nama Anggota:</p>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">{editingMember.name}</p>
-                <p className="text-[11px] text-slate-400 font-mono mt-0.5">{editingMember.contact}</p>
-              </div>
-
-              <Select 
-                label="Jabatan / Role" 
-                value={editForm.role} 
-                onChange={(e: any) => setEditForm({ ...editForm, role: e.target.value })} 
-                options={[
-                  { value: 'Anggota', label: 'Anggota' },
-                  { value: 'Pengurus', label: 'Pengurus' },
-                  { value: 'PJ Sound', label: 'PJ Sound System' },
-                  { value: 'PJ Media', label: 'PJ Multimedia' },
-                  { value: 'Bendahara', label: 'Bendahara' },
-                  { value: 'Ketua', label: 'Ketua / Pembina' },
-                  { value: 'Super Admin', label: 'Super Admin' }
-                ]} 
-              />
-
-              <Input 
-                label="Divisi / Departemen Pelayanan" 
-                value={editForm.division} 
-                onChange={(e: any) => setEditForm({ ...editForm, division: e.target.value })} 
-                placeholder="Cth: Youth / Multimedia / Puji-Pujian" 
-              />
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="ghost" type="button" onClick={() => setEditingMember(null)}>Batal</Button>
-                <Button type="submit">Simpan Perubahan Role</Button>
-              </div>
+            <form onSubmit={(e) => { e.preventDefault(); onUpdateMember(editingMember.id, editForm); setEditingMember(null); }} className="space-y-4">
+              <Select label="Jabatan / Role" value={editForm.role} onChange={(e: any) => setEditForm({ ...editForm, role: e.target.value })} options={[{ value: 'Anggota', label: 'Anggota' }, { value: 'Pengurus', label: 'Pengurus' }, { value: 'PJ Sound', label: 'PJ Sound System' }, { value: 'PJ Media', label: 'PJ Multimedia' }, { value: 'Bendahara', label: 'Bendahara' }, { value: 'Ketua', label: 'Ketua' }, { value: 'Super Admin', label: 'Super Admin' }]} />
+              <Input label="Divisi" value={editForm.division} onChange={(e: any) => setEditForm({ ...editForm, division: e.target.value })} />
+              <div className="flex justify-end gap-2 pt-2"><Button variant="ghost" onClick={() => setEditingMember(null)}>Batal</Button><Button type="submit">Simpan</Button></div>
             </form>
           </div>
         </div>
@@ -642,7 +606,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl relative border border-slate-200 dark:border-slate-800">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Arahkan Kamera ke QR Code</h3>
-              <button onClick={() => setIsScanning(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
+              <button onClick={() => setIsScanning(false)} className="text-slate-400"><X className="w-6 h-6"/></button>
             </div>
             <div id="reader" className="overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-950"></div>
           </div>
@@ -652,34 +616,23 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
       {activeQRMember && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <button onClick={() => setActiveQRMember(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
+            <button onClick={() => setActiveQRMember(null)} className="absolute top-4 right-4 text-slate-400"><X className="w-6 h-6"/></button>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">KOMDA ID</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-4">{activeQRMember.division} Division</p>
-            
-            <div className="mb-4 flex justify-center">
-              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-indigo-500 shadow-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                {activeQRMember.photoUrl ? (
-                  <img src={activeQRMember.photoUrl} alt={activeQRMember.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-xl font-bold text-indigo-600 uppercase">{activeQRMember.name.substring(0, 2)}</span>
-                )}
-              </div>
-            </div>
-
             <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/#member=${activeQRMember.qrId || 'MEMBER-DEFAULT'}`)}`} alt="QR" className="w-44 h-44 object-contain" />
             </div>
             <h4 className="text-xl font-bold text-slate-900 dark:text-white">{activeQRMember.name}</h4>
             <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-1 font-bold tracking-widest">{activeQRMember.qrId || 'MEMBER-XXXXXX'}</p>
             <div className="mt-6 flex flex-col gap-2">
-              <Button onClick={() => handleDownloadQR(activeQRMember.name, activeQRMember.qrId || 'MEMBER')} variant="secondary" className="w-full">
+              <Button onClick={() => {
+                const link = document.createElement('a');
+                link.href = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(activeQRMember.qrId || '')}`;
+                link.download = `QR-${activeQRMember.name}.png`;
+                link.click();
+              }} variant="secondary" className="w-full">
                 <Download className="w-4 h-4" /> Download QR Code
               </Button>
-              {isSuperAdmin && (
-                <Button onClick={() => { onUpdateXP(activeQRMember.id, (activeQRMember.xp || 0) + 10); setActiveQRMember(null); }} variant="emerald" className="w-full">
-                  <QrCode className="w-4 h-4" /> Hadir (+10 XP)
-                </Button>
-              )}
             </div>
           </div>
         </div>
@@ -689,27 +642,12 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
         <Card className="border-indigo-500/50">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="Nama Lengkap" required value={formData.name} onChange={(e:any) => setFormData({...formData, name: e.target.value})} placeholder="Contoh: Daniel Wibowo" />
-              <Select label="Jabatan/Role" value={formData.role} onChange={(e:any) => setFormData({...formData, role: e.target.value})} options={[{value:'Anggota',label:'Anggota'},{value:'Pengurus',label:'Pengurus'},{value:'PJ Sound',label:'PJ Sound System'},{value:'PJ Media',label:'PJ Multimedia'},{value:'Bendahara',label:'Bendahara'},{value:'Ketua',label:'Ketua / Pembina'},{value:'Super Admin',label:'Super Admin'}]} />
-              <Input label="Divisi Pelayanan" value={formData.division} onChange={(e:any) => setFormData({...formData, division: e.target.value})} placeholder="Puji-Pujian / Sound / Media" />
-              <Input label="Kontak (WA/Discord)" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} placeholder="@username atau 0812..." />
-              <Input label="XP Poin" type="number" min="0" value={formData.xp} onChange={(e:any) => setFormData({...formData, xp: e.target.value})} />
-              
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Foto Profil</label>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-                    {isCompressing ? <span className="text-[10px]">...</span> : formData.photoUrl ? <img src={formData.photoUrl} alt="Preview" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-slate-400" />}
-                  </div>
-                  <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isCompressing} className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-500/10 dark:file:text-indigo-400 hover:file:bg-indigo-100 transition-all cursor-pointer" />
-                </div>
-              </div>
+              <Input label="Nama Lengkap" required value={formData.name} onChange={(e:any) => setFormData({...formData, name: e.target.value})} />
+              <Select label="Jabatan/Role" value={formData.role} onChange={(e:any) => setFormData({...formData, role: e.target.value})} options={[{value:'Anggota',label:'Anggota'},{value:'Pengurus',label:'Pengurus'},{value:'PJ Sound',label:'PJ Sound System'},{value:'PJ Media',label:'PJ Multimedia'},{value:'Bendahara',label:'Bendahara'},{value:'Super Admin',label:'Super Admin'}]} />
+              <Input label="Divisi" value={formData.division} onChange={(e:any) => setFormData({...formData, division: e.target.value})} />
+              <Input label="Kontak" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} />
             </div>
-
-            <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-              <Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button>
-              <Button type="submit" disabled={isCompressing}>Simpan Anggota</Button>
-            </div>
+            <div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan</Button></div>
           </form>
         </Card>
       )}
@@ -719,11 +657,11 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
           <table className="w-full text-left text-sm text-slate-700 dark:text-slate-200">
             <thead className="bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-300 font-semibold text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th className="px-6 py-4">Rank</th>
-                <th className="px-6 py-4">Nama & ID</th>
-                <th className="px-6 py-4">Jabatan & Divisi</th>
-                <th className="px-6 py-4 text-center">Keaktifan (XP)</th>
-                {isSuperAdmin && <th className="px-6 py-4 text-right">Aksi Super Admin</th>}
+                <th className="px-6 py-4">Peringkat (Leaderboard)</th>
+                <th className="px-6 py-4">Anggota</th>
+                <th className="px-6 py-4">Role & Divisi</th>
+                <th className="px-6 py-4 text-center">XP Keaktifan</th>
+                {isSuperAdmin && <th className="px-6 py-4 text-right">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -733,32 +671,32 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
                 return (
                   <tr key={member.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                     <td className="px-6 py-4">
-                      {index === 0 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold">🥇 1</span> : 
-                       index === 1 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-400/20 text-slate-600 dark:text-slate-300 font-bold">🥈 2</span> : 
-                       index === 2 ? <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-orange-100 dark:bg-amber-700/20 text-orange-700 dark:text-amber-600 font-bold">🥉 3</span> : 
-                       <span className="font-mono text-slate-500 dark:text-slate-400 ml-2">#{index + 1}</span>}
+                      {index === 0 ? <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-amber-500/20 text-amber-500 font-bold text-xs gap-1">🥇 Juara 1</span> : 
+                       index === 1 ? <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-slate-500/20 text-slate-400 font-bold text-xs gap-1">🥈 Juara 2</span> : 
+                       index === 2 ? <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-orange-500/20 text-orange-500 font-bold text-xs gap-1">🥉 Juara 3</span> : 
+                       <span className="font-mono text-slate-500 ml-2"># {index + 1}</span>}
                     </td>
                     <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400 uppercase flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border flex items-center justify-center font-bold text-indigo-500 uppercase flex-shrink-0">
                           {member.photoUrl ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" /> : member.name.substring(0, 2)}
                         </div>
                         <div>
                           <div>{member.name}</div>
-                          <button onClick={() => setActiveQRMember(member)} className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-mono mt-0.5 font-semibold">
-                            <QrCode className="w-3 h-3"/> Tampilkan QR ID
+                          <button onClick={() => setActiveQRMember(member)} className="text-[10px] text-indigo-500 hover:underline flex items-center gap-1 font-mono mt-0.5">
+                            <QrCode className="w-3 h-3"/> Lihat QR ID
                           </button>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <Badge color={getRoleColor(member.role)}>{member.role}</Badge>
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{member.division || 'Umum'}</div>
+                      <div className="text-xs text-slate-500 mt-1">{member.division || 'Umum'}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="w-40 mx-auto">
                         <div className="flex justify-between items-center mb-1 text-xs">
-                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{member.xp || 0} XP</span>
+                          <span className="font-mono font-bold text-emerald-500">{member.xp || 0} XP</span>
                           <span className="text-slate-500">{progressPercent}%</span>
                         </div>
                         <div className="w-full bg-slate-100 dark:bg-slate-950 rounded-full h-1.5 overflow-hidden">
@@ -769,20 +707,8 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
                     {isSuperAdmin && (
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button 
-                            onClick={() => handleOpenEdit(member)} 
-                            title="Edit Role / Divisi"
-                            className="text-slate-400 hover:text-indigo-500 dark:text-slate-500 dark:hover:text-indigo-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => onDelete(member.id)} 
-                            title="Hapus Anggota"
-                            className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <button onClick={() => { setEditingMember(member); setEditForm({ role: member.role, division: member.division }); }} className="p-2 text-slate-400 hover:text-indigo-500"><Edit2 className="w-4 h-4"/></button>
+                          <button onClick={() => onDelete(member.id)} className="p-2 text-slate-400 hover:text-rose-500"><Trash2 className="w-4 h-4"/></button>
                         </div>
                       </td>
                     )}
@@ -799,169 +725,29 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
 
 const FinanceView = ({ transactions, onAdd, stats }: any) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState({ type: 'income', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
+  const [formData, setFormData] = useState({ type: 'income', amount: '', description: '', date: new Date().toISOString().split('T')[0], category: 'Kas Umum KOMDA', receiptUrl: '' });
+  const [isCompressing, setIsCompressing] = useState(false);
+
+  const handleReceiptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIsCompressing(true);
+      try {
+        const compressedBase64 = await compressImage(file, 400, 0.7);
+        setFormData(prev => ({ ...prev, receiptUrl: compressedBase64 }));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsCompressing(false);
+      }
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd({ ...formData, amount: parseFloat(formData.amount) || 0, category: 'Kas Umum' });
+    onAdd({ ...formData, amount: parseFloat(formData.amount) || 0 });
     setIsAdding(false);
-    setFormData({ type: 'income', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
-  };
-
-  const handleExportExcel = () => {
-    let excelHTML = `
-      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-      <head><meta charset="UTF-8"></head>
-      <body>
-        <table border="1">
-          <tr><td colspan="5" style="font-size: 16px; font-weight: bold; text-align: center;">BUKU KAS - KOMDA HUB</td></tr>
-          <tr><td colspan="5" style="font-size: 11px; text-align: center;">Dicetak pada: ${new Date().toLocaleDateString('id-ID', { dateStyle: 'full' })}</td></tr>
-          <tr><td colspan="5"></td></tr>
-          <tr style="background-color: #4338ca; color: white; font-weight: bold; text-align: center;">
-            <th style="padding: 6px; border: 1px solid #000;">Tanggal</th>
-            <th style="padding: 6px; border: 1px solid #000;">Keterangan</th>
-            <th style="padding: 6px; border: 1px solid #000;">Pemasukan (Rp)</th>
-            <th style="padding: 6px; border: 1px solid #000;">Pengeluaran (Rp)</th>
-            <th style="padding: 6px; border: 1px solid #000;">Saldo Akhir (Rp)</th>
-          </tr>
-    `;
-
-    const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    let runningBalance = 0;
-
-    sortedTransactions.forEach((t: any) => {
-      const amount = Number(t.amount) || 0;
-      if (t.type === 'income') {
-        runningBalance += amount;
-      } else {
-        runningBalance -= amount;
-      }
-
-      excelHTML += `
-        <tr>
-          <td style="border: 1px solid #000; text-align: center; mso-number-format:'\@';">${t.date}</td>
-          <td style="border: 1px solid #000;">${t.description}</td>
-          <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${t.type === 'income' ? amount : '-'}</td>
-          <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${t.type === 'expense' ? amount : '-'}</td>
-          <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${runningBalance}</td>
-        </tr>
-      `;
-    });
-
-    const totalIncome = sortedTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-    const totalExpense = sortedTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-
-    excelHTML += `
-          <tr style="background-color: #1e293b; color: white; font-weight: bold;">
-            <td colspan="2" style="border: 1px solid #000; text-align: right;">TOTAL KESELURUHAN:</td>
-            <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${totalIncome}</td>
-            <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${totalExpense}</td>
-            <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${runningBalance}</td>
-          </tr>
-        </table>
-      </body>
-      </html>
-    `;
-
-    const blob = new Blob([excelHTML], { type: 'application/vnd.ms-excel' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Buku_Kas_KOMDA_${new Date().toISOString().split('T')[0]}.xls`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  const handleExportPDF = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Mohon izinkan pop-up pada browser untuk mencetak PDF.');
-      return;
-    }
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Laporan Keuangan KOMDA GKJ Slogohimo</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ddd; padding-bottom: 15px; }
-          .header h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-          .header p { margin: 5px 0 0; color: #666; font-size: 12px; }
-          .summary { display: flex; justify-content: space-between; margin-bottom: 25px; gap: 15px; }
-          .summary-card { flex: 1; border: 1px solid #ccc; padding: 12px; border-radius: 6px; text-align: center; }
-          .summary-card h3 { margin: 0; font-size: 11px; color: #555; text-transform: uppercase; }
-          .summary-card p { margin: 6px 0 0; font-size: 16px; font-weight: bold; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-          th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
-          th { background-color: #f4f4f4; }
-          .text-right { text-align: right; }
-          .income { color: #047857; font-weight: bold; }
-          .expense { color: #b91c1c; font-weight: bold; }
-          .footer { margin-top: 40px; text-align: right; font-size: 12px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>Laporan Keuangan KOMDA HUB</h1>
-          <p>GKJ Slogohimo • Dicetak pada: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
-        
-        <div class="summary">
-          <div class="summary-card">
-            <h3>Total Pemasukan</h3>
-            <p style="color: #047857;">Rp ${(stats?.income || 0).toLocaleString('id-ID')}</p>
-          </div>
-          <div class="summary-card">
-            <h3>Total Pengeluaran</h3>
-            <p style="color: #b91c1c;">Rp ${(stats?.expense || 0).toLocaleString('id-ID')}</p>
-          </div>
-          <div class="summary-card">
-            <h3>Saldo Akhir Kas</h3>
-            <p>Rp ${(stats?.balance || 0).toLocaleString('id-ID')}</p>
-          </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Tanggal</th>
-              <th>Keterangan</th>
-              <th>Jenis</th>
-              <th class="text-right">Jumlah (Rp)</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${transactions.sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t: Transaction) => `
-              <tr>
-                <td>${new Date(t.date).toLocaleDateString('id-ID')}</td>
-                <td><b>${t.description}</b></td>
-                <td>${t.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}</td>
-                <td class="text-right ${t.type === 'income' ? 'income' : 'expense'}">
-                  ${t.type === 'income' ? '+' : '-'} Rp ${t.amount.toLocaleString('id-ID')}
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-
-        <div class="footer">
-          <p>Bendahara KOMDA GKJ Slogohimo</p>
-          <br><br>
-          <p><b>( ............................................ )</b></p>
-        </div>
-
-        <script>
-          window.onload = function() { window.print(); }
-        </script>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+    setFormData({ type: 'income', amount: '', description: '', date: new Date().toISOString().split('T')[0], category: 'Kas Umum KOMDA', receiptUrl: '' });
   };
 
   return (
@@ -969,53 +755,73 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-            <DollarSign className="w-8 h-8 text-emerald-500 dark:text-emerald-400" /> Keuangan & Kas
+            <DollarSign className="w-8 h-8 text-emerald-500" /> Keuangan & Persembahan Digital
           </h2>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={handleExportExcel}><Download className="w-4 h-4" /> Export Excel</Button>
-          <Button variant="secondary" onClick={handleExportPDF}><Printer className="w-4 h-4" /> Export PDF</Button>
-          <Button variant="emerald" onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Catat Transaksi</Button>
+        <div className="flex gap-2">
+          <Button variant="emerald" onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Catat Kas / Persembahan</Button>
         </div>
       </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border-emerald-500/30">
-          <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Pemasukan</p>
-          <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">Rp {(stats?.income || 0).toLocaleString('id-ID')}</p>
+          <p className="text-slate-500 text-xs font-semibold uppercase">Total Pemasukan</p>
+          <p className="text-2xl font-extrabold text-emerald-500 mt-1">Rp {(stats?.income || 0).toLocaleString('id-ID')}</p>
         </Card>
         <Card className="border-rose-500/30">
-          <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Pengeluaran</p>
-          <p className="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">Rp {(stats?.expense || 0).toLocaleString('id-ID')}</p>
+          <p className="text-slate-500 text-xs font-semibold uppercase">Total Pengeluaran</p>
+          <p className="text-2xl font-extrabold text-rose-500 mt-1">Rp {(stats?.expense || 0).toLocaleString('id-ID')}</p>
         </Card>
         <Card className="border-indigo-500/30">
-          <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Saldo Kas</p>
+          <p className="text-slate-500 text-xs font-semibold uppercase">Saldo Akhir</p>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">Rp {(stats?.balance || 0).toLocaleString('id-ID')}</p>
         </Card>
       </div>
+
       {isAdding && (
         <Card className="border-emerald-500/50">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select label="Jenis Transaksi" value={formData.type} onChange={(e:any) => setFormData({...formData, type: e.target.value})} options={[{value:'income',label:'Pemasukan (+)'},{value:'expense',label:'Pengeluaran (-)'}]} />
-            <Input label="Jumlah (Rp)" type="number" required min="0" value={formData.amount} onChange={(e:any) => setFormData({...formData, amount: e.target.value})} placeholder="100000" />
-            <Input label="Keterangan" required value={formData.description} onChange={(e:any) => setFormData({...formData, description: e.target.value})} />
-            <Input label="Tanggal" type="date" required value={formData.date} onChange={(e:any) => setFormData({...formData, date: e.target.value})} />
-            <div className="md:col-span-2 flex justify-end gap-2 mt-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button variant="emerald" type="submit">Simpan Transaksi</Button></div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Select label="Jenis Transaksi" value={formData.type} onChange={(e:any) => setFormData({...formData, type: e.target.value})} options={[{value:'income',label:'Pemasukan / Persembahan (+)'},{value:'expense',label:'Pengeluaran / Belanja (-)'}]} />
+              <Select label="Kategori Kas / Divisi" value={formData.category} onChange={(e:any) => setFormData({...formData, category: e.target.value})} options={[{value:'Kas Umum KOMDA',label:'Kas Umum KOMDA'},{value:'Persembahan Ibadah Pemuda',label:'Persembahan Ibadah Pemuda'},{value:'Dana Khusus Natal / Paskah',label:'Dana Khusus Natal / Paskah'},{value:'Bidang Baksos / Diakonia',label:'Bidang Baksos / Diakonia'}]} />
+              <Input label="Jumlah (Rp)" type="number" required min="0" value={formData.amount} onChange={(e:any) => setFormData({...formData, amount: e.target.value})} />
+              <Input label="Tanggal" type="date" required value={formData.date} onChange={(e:any) => setFormData({...formData, date: e.target.value})} />
+              <Input label="Keterangan / Sumber" required value={formData.description} onChange={(e:any) => setFormData({...formData, description: e.target.value})} className="md:col-span-2" />
+              
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Unggah Bukti Transfer / Nota Belanja (Opsional)</label>
+                <input type="file" accept="image/*" onChange={handleReceiptUpload} disabled={isCompressing} className="w-full text-xs text-slate-500 file:py-2 file:px-4 file:rounded-lg file:bg-emerald-50 file:text-emerald-700 dark:file:bg-emerald-500/10 dark:file:text-emerald-400 cursor-pointer" />
+                {formData.receiptUrl && <p className="text-xs text-emerald-500 mt-1 font-semibold">✓ Nota/Bukti transfer berhasil dilampirkan.</p>}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button variant="emerald" type="submit">Simpan Transaksi</Button></div>
           </form>
         </Card>
       )}
+
       <Card className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-700 dark:text-slate-200">
-            <thead className="bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-300 font-semibold text-xs border-b border-slate-200 dark:border-slate-800">
-              <tr><th className="px-6 py-4">Tanggal</th><th className="px-6 py-4">Keterangan</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4 text-right">Jumlah</th></tr>
+            <thead className="bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-300 font-semibold text-xs border-b">
+              <tr><th className="px-6 py-4">Tanggal & Kategori</th><th className="px-6 py-4">Keterangan</th><th className="px-6 py-4">Bukti / Nota</th><th className="px-6 py-4 text-right">Jumlah</th></tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {transactions.sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t: Transaction) => (
                 <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                  <td className="px-6 py-4 text-xs font-mono">{new Date(t.date).toLocaleDateString('id-ID')}</td>
+                  <td className="px-6 py-4">
+                    <div className="text-xs font-mono text-slate-500">{t.date}</div>
+                    <Badge color="purple">{t.category || 'Kas Umum'}</Badge>
+                  </td>
                   <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{t.description}</td>
-                  <td className="px-6 py-4"><Badge color={t.type === 'income' ? 'emerald' : 'rose'}>{t.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}</Badge></td>
-                  <td className={`px-6 py-4 text-right font-mono font-bold ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>{t.type === 'income' ? '+' : '-'} Rp {t.amount.toLocaleString('id-ID')}</td>
+                  <td className="px-6 py-4">
+                    {t.receiptUrl ? (
+                      <a href={t.receiptUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-indigo-500 font-bold hover:underline">
+                        <ImageIcon className="w-4 h-4"/> Lihat Nota
+                      </a>
+                    ) : <span className="text-xs text-slate-400">Tanpa Nota</span>}
+                  </td>
+                  <td className={`px-6 py-4 text-right font-mono font-bold ${t.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}>{t.type === 'income' ? '+' : '-'} Rp {t.amount.toLocaleString('id-ID')}</td>
                 </tr>
               ))}
             </tbody>
@@ -1038,54 +844,30 @@ const InventoryView = ({ category, items, onAdd, onDelete, selectedGearQR, setSe
     setFormData({ name: '', condition: 'Good', quantity: 1, location: 'Ruang Sound/Media' });
   };
 
-  const handleDownloadGearQR = (name: string, qrCodeId: string) => {
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/#gear=${qrCodeId}`)}`;
-    const link = document.createElement('a');
-    link.href = qrUrl;
-    link.download = `QR-Gear-${name.replace(/\s+/g, '_')}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-            {category === 'Sound System' && <Speaker className="w-8 h-8 text-amber-500 dark:text-amber-400" />}
-            {category === 'Multimedia' && <Camera className="w-8 h-8 text-cyan-500 dark:text-cyan-400" />}
-            {category === 'Properti' && <Armchair className="w-8 h-8 text-indigo-500 dark:text-indigo-400" />}
+            {category === 'Sound System' && <Speaker className="w-8 h-8 text-amber-500" />}
+            {category === 'Multimedia' && <Camera className="w-8 h-8 text-cyan-500" />}
+            {category === 'Properti' && <Armchair className="w-8 h-8 text-indigo-500" />}
             Inventaris {category}
           </h2>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Gear</Button>
-        </div>
+        <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Gear</Button>
       </div>
 
       {selectedGearQR && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <button onClick={() => setSelectedGearQR(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">GEAR ID</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">{selectedGearQR.category}</p>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative border">
+            <button onClick={() => setSelectedGearQR(null)} className="absolute top-4 right-4"><X className="w-6 h-6"/></button>
+            <h3 className="text-2xl font-black mb-1">GEAR ID</h3>
             <div className="bg-white p-4 rounded-2xl inline-block border-4 border-indigo-100 shadow-inner mb-6">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/#gear=${selectedGearQR.qrCodeId || 'GEAR-DEFAULT'}`)}`} alt="QR" className="w-48 h-48 object-contain" />
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(selectedGearQR.qrCodeId || '')}`} alt="QR" className="w-44 h-44 object-contain" />
             </div>
-            <h4 className="text-xl font-bold text-slate-900 dark:text-white">{selectedGearQR.name}</h4>
-            <p className="text-indigo-600 dark:text-indigo-400 font-mono text-sm mt-2 font-bold tracking-widest">{selectedGearQR.qrCodeId || 'GEAR-XXXXXX'}</p>
-            <div className="mt-4 text-xs text-slate-500 space-y-1 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-left">
-              <div>📍 <b>Lokasi:</b> {selectedGearQR.location}</div>
-              <div>📦 <b>Jumlah:</b> {selectedGearQR.quantity} unit</div>
-              <div>⚡ <b>Kondisi:</b> {selectedGearQR.condition}</div>
-            </div>
-            <div className="mt-6 flex flex-col gap-2">
-              <Button onClick={() => handleDownloadGearQR(selectedGearQR.name, selectedGearQR.qrCodeId || 'GEAR')} variant="secondary" className="w-full">
-                <Download className="w-4 h-4" /> Download QR Code
-              </Button>
-              <Button onClick={() => setSelectedGearQR(null)} variant="ghost" className="w-full">Tutup</Button>
-            </div>
+            <h4 className="text-xl font-bold">{selectedGearQR.name}</h4>
+            <p className="text-indigo-500 font-mono text-sm mt-1 font-bold">{selectedGearQR.qrCodeId}</p>
           </div>
         </div>
       )}
@@ -1095,27 +877,26 @@ const InventoryView = ({ category, items, onAdd, onDelete, selectedGearQR, setSe
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Nama Peralatan" required value={formData.name} onChange={(e:any) => setFormData({...formData, name: e.target.value})} />
             <Input label="Jumlah Unit" type="number" required min="1" value={formData.quantity} onChange={(e:any) => setFormData({...formData, quantity: e.target.value})} />
-            <Select label="Kondisi Alat" value={formData.condition} onChange={(e:any) => setFormData({...formData, condition: e.target.value})} options={[{value:'Good',label:'Baik & Siap Pakai'},{value:'Needs Repair',label:'Perlu Servis'},{value:'Broken',label:'Rusak / Matot'}]} />
-            <Input label="Lokasi Penyimpanan" value={formData.location} onChange={(e:any) => setFormData({...formData, location: e.target.value})} />
-            <div className="md:col-span-2 flex justify-end gap-2 mt-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan Gear</Button></div>
+            <Select label="Kondisi Alat" value={formData.condition} onChange={(e:any) => setFormData({...formData, condition: e.target.value})} options={[{value:'Good',label:'Baik & Siap Pakai'},{value:'Needs Repair',label:'Perlu Servis'},{value:'Broken',label:'Rusak'}]} />
+            <Input label="Lokasi" value={formData.location} onChange={(e:any) => setFormData({...formData, location: e.target.value})} />
+            <div className="md:col-span-2 flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan</Button></div>
           </form>
         </Card>
       )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((item: any) => (
-          <Card key={item.id} className="flex flex-col hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+          <Card key={item.id} className="flex flex-col">
             <div className="flex justify-between items-start gap-2 mb-3">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">{item.name}</h3>
-              <Badge color={item.condition === 'Good' ? 'emerald' : item.condition === 'Needs Repair' ? 'amber' : 'rose'}>{item.condition === 'Good' ? 'Baik' : item.condition === 'Needs Repair' ? 'Servis' : 'Rusak'}</Badge>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">{item.name}</h3>
+              <Badge color={item.condition === 'Good' ? 'emerald' : item.condition === 'Needs Repair' ? 'amber' : 'rose'}>{item.condition}</Badge>
             </div>
-            <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400 mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex justify-between"><span>Jumlah:</span><span className="text-slate-900 dark:text-white font-bold">{item.quantity} unit</span></div>
-              <div className="flex justify-between"><span>Lokasi:</span><span className="text-slate-700 dark:text-slate-300">{item.location}</span></div>
+            <div className="space-y-2 text-xs text-slate-500 mt-auto pt-2 border-t">
+              <div className="flex justify-between"><span>Jumlah:</span><span className="font-bold text-slate-900 dark:text-white">{item.quantity} unit</span></div>
+              <div className="flex justify-between"><span>Lokasi:</span><span>{item.location}</span></div>
               <div className="flex justify-between items-center pt-1">
-                <button onClick={() => setSelectedGearQR(item)} className="inline-flex items-center gap-1 font-mono text-[11px] text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors font-semibold">
-                  <QrCode className="w-3.5 h-3.5" /> Tampilkan QR
-                </button>
-                <button onClick={() => onDelete(item.id)} className="text-slate-400 hover:text-rose-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                <button onClick={() => setSelectedGearQR(item)} className="text-indigo-500 font-bold flex items-center gap-1"><QrCode className="w-3.5 h-3.5"/> QR Code</button>
+                <button onClick={() => onDelete(item.id)} className="text-slate-400 hover:text-rose-500"><Trash2 className="w-4 h-4"/></button>
               </div>
             </div>
           </Card>
@@ -1127,43 +908,74 @@ const InventoryView = ({ category, items, onAdd, onDelete, selectedGearQR, setSe
 
 const BorrowingView = ({ borrowings, inventory, onAdd, onUpdateStatus }: any) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState({ itemId: '', borrowerName: '', startDate: '', endDate: '', purpose: '' });
+  const [formData, setFormData] = useState({ itemId: '', borrowerName: '', startDate: '', endDate: '', purpose: '', checkOutCondition: 'Baik & Normal' });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedGear = inventory.find((i: any) => i.id === formData.itemId);
-    onAdd({ ...formData, itemName: selectedGear ? selectedGear.name : 'Unknown Gear', status: 'Pending' });
-    setIsAdding(false); setFormData({ itemId: '', borrowerName: '', startDate: '', endDate: '', purpose: '' });
+    onAdd({ ...formData, itemName: selectedGear ? selectedGear.name : 'Gear', status: 'Pending' });
+    setIsAdding(false);
+    setFormData({ itemId: '', borrowerName: '', startDate: '', endDate: '', purpose: '', checkOutCondition: 'Baik & Normal' });
   };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><ArrowRightLeft className="w-8 h-8 text-indigo-500 dark:text-indigo-400" /> Sistem Peminjaman</h2>
-        <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Ajukan</Button>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><ArrowRightLeft className="w-8 h-8 text-indigo-500" /> Peminjaman & Check-in Kondisi</h2>
+        <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Ajukan Peminjaman</Button>
       </div>
+
       {isAdding && (
         <Card className="border-indigo-500/50">
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select label="Pilih Peralatan" value={formData.itemId} onChange={(e:any) => setFormData({...formData, itemId: e.target.value})} options={[{value:'',label:'-- Pilih Barang --'}, ...inventory.map((i:any) => ({value:i.id, label:i.name}))]} />
-            <Input label="Peminjam" required value={formData.borrowerName} onChange={(e:any) => setFormData({...formData, borrowerName: e.target.value})} />
+            <Select label="Pilih Peralatan" value={formData.itemId} onChange={(e:any) => setFormData({...formData, itemId: e.target.value})} options={[{value:'',label:'-- Pilih Alat --'}, ...inventory.map((i:any) => ({value:i.id, label:i.name}))]} />
+            <Input label="Nama Peminjam" required value={formData.borrowerName} onChange={(e:any) => setFormData({...formData, borrowerName: e.target.value})} />
             <Input label="Tgl Pinjam" type="date" required value={formData.startDate} onChange={(e:any) => setFormData({...formData, startDate: e.target.value})} />
             <Input label="Tgl Kembali" type="date" required value={formData.endDate} onChange={(e:any) => setFormData({...formData, endDate: e.target.value})} />
-            <div className="md:col-span-2 flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Kirim</Button></div>
+            <Input label="Kondisi Fisik Saat Keluar (Check-out)" value={formData.checkOutCondition} onChange={(e:any) => setFormData({...formData, checkOutCondition: e.target.value})} />
+            <Input label="Keperluan / Acara" value={formData.purpose} onChange={(e:any) => setFormData({...formData, purpose: e.target.value})} />
+            <div className="md:col-span-2 flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Kirim Pengajuan</Button></div>
           </form>
         </Card>
       )}
+
       <div className="space-y-3">
-        {borrowings.map((b: any) => (
-          <Card key={b.id} className="flex justify-between items-center">
-            <div>
-              <div className="flex items-center gap-2"><p className="font-bold text-slate-900 dark:text-white">{b.itemName}</p><Badge color={b.status === 'Approved' ? 'emerald' : b.status === 'Pending' ? 'amber' : b.status === 'Returned' ? 'cyan' : 'rose'}>{b.status}</Badge></div>
-              <p className="text-xs text-slate-500 mt-1">Peminjam: {b.borrowerName} • Tgl: {b.startDate} s/d {b.endDate}</p>
-            </div>
-            <div className="flex gap-2">
-              {b.status === 'Pending' && (<><Button variant="emerald" className="text-xs py-1.5" onClick={() => onUpdateStatus(b.id, 'Approved')}>Approve</Button><Button variant="danger" className="text-xs py-1.5" onClick={() => onUpdateStatus(b.id, 'Rejected')}>Reject</Button></>)}
-              {b.status === 'Approved' && <Button variant="secondary" className="text-xs py-1.5" onClick={() => onUpdateStatus(b.id, 'Returned')}>Kembali</Button>}
-            </div>
-          </Card>
-        ))}
+        {borrowings.map((b: any) => {
+          // Cek tanggal jatuh tempo untuk Notifikasi Otomatis
+          const today = new Date();
+          const endDate = new Date(b.endDate);
+          const diffDays = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+          const isNearDue = b.status === 'Approved' && diffDays <= 2 && diffDays >= 0;
+
+          return (
+            <Card key={b.id} className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isNearDue ? 'border-amber-500/50 bg-amber-500/5' : ''}`}>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-slate-900 dark:text-white text-base">{b.itemName}</p>
+                  <Badge color={b.status === 'Approved' ? 'emerald' : b.status === 'Pending' ? 'amber' : b.status === 'Returned' ? 'cyan' : 'rose'}>{b.status}</Badge>
+                  {isNearDue && <Badge color="amber">⚠️ Mendekati Tenggat Waktu ({diffDays} hari lagi)</Badge>}
+                </div>
+                <p className="text-xs text-slate-500">Peminjam: <b>{b.borrowerName}</b> • {b.startDate} s/d {b.endDate}</p>
+                <p className="text-xs text-slate-400">Check-out Kondisi: {b.checkOutCondition || 'Baik'}</p>
+              </div>
+
+              <div className="flex gap-2 items-center">
+                {b.status === 'Pending' && (
+                  <>
+                    <Button variant="emerald" className="text-xs py-1.5" onClick={() => onUpdateStatus(b.id, 'Approved')}>Approve</Button>
+                    <Button variant="danger" className="text-xs py-1.5" onClick={() => onUpdateStatus(b.id, 'Rejected')}>Reject</Button>
+                  </>
+                )}
+                {b.status === 'Approved' && (
+                  <Button variant="secondary" className="text-xs py-1.5" onClick={() => {
+                    const cond = prompt("Masukkan kondisi fisik saat dikembalikan (Check-in):", "Baik / Normal tanpa ada kerusakan");
+                    if (cond !== null) onUpdateStatus(b.id, 'Returned', cond);
+                  }}>Selesaikan / Kembali</Button>
+                )}
+              </div>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
@@ -1173,55 +985,19 @@ const CalendarView = ({ events, onAdd }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ title: '', date: '', time: '18:00 WIB', location: 'Gereja', type: 'Service', description: '' });
   
-  const handleSubmit = (e: React.FormEvent) => { 
-    e.preventDefault(); 
-    onAdd(formData); 
-    setIsAdding(false); 
-    setFormData({ title: '', date: '', time: '18:00 WIB', location: 'Gereja', type: 'Service', description: '' }); 
-  };
-
-  const isEventPast = (eventDateStr: string) => {
-    if (!eventDateStr) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const eventDate = new Date(eventDateStr);
-    eventDate.setHours(0, 0, 0, 0);
-    return eventDate < today;
-  };
-
-  const handleSendEventToDiscord = async (evt: any) => {
-    try {
-      const discordMsg = `📅 **AGENDA PELAYANAN KOMDA HUB**\n\n📌 **Acara:** ${evt.title}\n🏷️ **Jenis:** ${evt.type}\n📍 **Lokasi:** ${evt.location}\n⏰ **Waktu:** ${evt.date} (${evt.time})`;
-      
-      const response = await fetch(PERMANENT_DISCORD_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: discordMsg })
-      });
-
-      if (response.ok || response.status === 204) {
-        alert('Agenda acara berhasil dikirim ke Discord!');
-      } else {
-        alert('Gagal mengirim ke Discord.');
-      }
-    } catch (err) {
-      alert('Terjadi kesalahan jaringan.');
-    }
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
-          <CalendarIcon className="w-8 h-8 text-cyan-500 dark:text-cyan-400" /> Agenda Pelayanan
+          <CalendarIcon className="w-8 h-8 text-cyan-500" /> Agenda Pelayanan
         </h2>
-        <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah</Button>
+        <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Agenda</Button>
       </div>
 
       {isAdding && (
         <Card className="border-indigo-500/50">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Acara" required value={formData.title} onChange={(e:any) => setFormData({...formData, title: e.target.value})} />
+          <form onSubmit={(e) => { e.preventDefault(); onAdd(formData); setIsAdding(false); }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Nama Acara" required value={formData.title} onChange={(e:any) => setFormData({...formData, title: e.target.value})} />
             <Select label="Jenis" value={formData.type} onChange={(e:any) => setFormData({...formData, type: e.target.value})} options={[{value:'Service',label:'Ibadah'},{value:'Youth',label:'Pemuda'},{value:'Rehearsal',label:'Latihan'}]} />
             <Input label="Tanggal" type="date" required value={formData.date} onChange={(e:any) => setFormData({...formData, date: e.target.value})} />
             <Input label="Jam" value={formData.time} onChange={(e:any) => setFormData({...formData, time: e.target.value})} />
@@ -1231,96 +1007,30 @@ const CalendarView = ({ events, onAdd }: any) => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {events.map((e: any) => {
-          const past = isEventPast(e.date);
-          return (
-            <Card key={e.id} className={`${past ? 'opacity-75 border-slate-300 dark:border-slate-800' : ''} flex flex-col justify-between`}>
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <Badge color={past ? 'slate' : 'cyan'}>{e.type}</Badge>
-                    {past && <Badge color="rose">Selesai</Badge>}
-                  </div>
-                  <span className="font-mono text-xs text-slate-500">{e.date}</span>
-                </div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-base">{e.title}</h3>
-                <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-2">📍 {e.location} • ⏰ {e.time}</p>
+        {events.map((e: any) => (
+          <Card key={e.id} className="flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <Badge color="cyan">{e.type}</Badge>
+                <span className="font-mono text-xs text-slate-500">{e.date}</span>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                <button 
-                  onClick={() => handleSendEventToDiscord(e)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs bg-[#5865F2]/10 text-[#5865F2] hover:bg-[#5865F2]/20 transition-colors border border-[#5865F2]/20"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" /> Kirim ke Discord
-                </button>
-              </div>
-            </Card>
-          );
-        })}
-        {events.length === 0 && <p className="col-span-full text-slate-500 italic">Belum ada agenda pelayanan tercatat.</p>}
-      </div>
-    </div>
-  );
-};
-
-const DiscordWebhookView = () => {
-  const [message, setMessage] = useState('');
-  const [status, setStatus] = useState<{ type: 'success' | 'error' | null; text: string }>({ type: null, text: '' });
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!message.trim()) return;
-
-    setIsLoading(true);
-    setStatus({ type: null, text: '' });
-
-    try {
-      const response = await fetch(PERMANENT_DISCORD_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: message })
-      });
-
-      if (response.ok || response.status === 204) {
-        setStatus({ type: 'success', text: 'Pesan berhasil dikirim ke Discord!' });
-        setMessage('');
-      } else {
-        setStatus({ type: 'error', text: 'Gagal mengirim pesan ke Discord.' });
-      }
-    } catch (err) {
-      setStatus({ type: 'error', text: 'Terjadi kesalahan jaringan.' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6 max-w-3xl mx-auto animate-in fade-in duration-300">
-      <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
-        <MessageSquare className="w-8 h-8 text-[#5865F2]" /> Discord Broadcast
-      </h2>
-      
-      <Card className="border-[#5865F2]/40">
-        <form onSubmit={handleSend} className="space-y-4">
-          <div className="bg-slate-100 dark:bg-slate-950 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
-            <span className="text-slate-500 font-semibold">Webhook Tujuan:</span>
-            <span className="font-mono text-indigo-600 dark:text-indigo-400 truncate max-w-[280px] sm:max-w-md">Kanal Resmi KOMDA</span>
-          </div>
-
-          <Textarea label="Pesan Broadcast" rows={5} value={message} onChange={(e:any) => setMessage(e.target.value)} placeholder="Tulis pengumuman..." required />
-
-          {status.type && (
-            <div className={`p-3 rounded-lg text-xs font-semibold ${status.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
-              {status.text}
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">{e.title}</h3>
+              <p className="text-xs text-indigo-500 mt-2">📍 {e.location} • ⏰ {e.time}</p>
             </div>
-          )}
-
-          <Button variant="discord" type="submit" className="w-full" disabled={isLoading}>
-            <Send className="w-4 h-4" /> {isLoading ? 'Mengirim...' : 'Kirim Pesan ke Discord'}
-          </Button>
-        </form>
-      </Card>
+            <div className="mt-4 pt-3 border-t flex justify-end">
+              <button onClick={() => {
+                fetch(PERMANENT_DISCORD_WEBHOOK_URL, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ content: `📅 **AGENDA KOMDA:** ${e.title} (${e.date} jam ${e.time}) di ${e.location}` })
+                }).then(() => alert('Terkirim ke Discord!'));
+              }} className="text-xs text-[#5865F2] font-bold flex items-center gap-1 hover:underline">
+                <MessageSquare className="w-3.5 h-3.5" /> Kirim ke Discord
+              </button>
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
@@ -1328,115 +1038,49 @@ const DiscordWebhookView = () => {
 const WorshipSongLibraryView = ({ songs, onAdd, onDelete }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
-  const [transposeStep, setTransposeStep] = useState(0);
+  const [isPresenterMode, setIsPresenterMode] = useState(false);
   const [formData, setFormData] = useState({ title: '', key: 'C', lyrics: '' });
-  
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
-
-  const handleSubmit = (e: React.FormEvent) => { 
-    e.preventDefault(); 
-    onAdd(formData); 
-    setIsAdding(false); 
-    setFormData({ title: '', key: 'C', lyrics: '' }); 
-  };
-
-  const transposeChord = (chord: string, semitones: number): string => {
-    const CHORDS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const match = chord.match(/^([A-G][b#]?)(.*)$/);
-    if (!match) return chord;
-    const [, root, modifier] = match;
-    let index = CHORDS.indexOf(root);
-    if (index === -1) return chord;
-    let newIndex = (index + semitones) % 12;
-    if (newIndex < 0) newIndex += 12;
-    return CHORDS[newIndex] + modifier;
-  };
-
-  const getTransformedLyrics = (lyrics: string) => {
-    if (transposeStep === 0) return lyrics;
-    return lyrics.replace(/\[(.*?)\]/g, (match, chordGroup) => {
-      const transposed = chordGroup.split(' ').map((c: string) => transposeChord(c, transposeStep)).join(' ');
-      return `[${transposed}]`;
-    });
-  };
-
-  const filteredSongs = useMemo(() => {
-    return songs.filter((s: Song) => 
-      s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.lyrics.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.key.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [songs, searchQuery]);
-
-  const totalPages = Math.ceil(filteredSongs.length / itemsPerPage) || 1;
-  const paginatedSongs = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredSongs.slice(start, start + itemsPerPage);
-  }, [filteredSongs, currentPage]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
-            <Music className="w-8 h-8 text-rose-500" /> Database Pujian
+            <Music className="w-8 h-8 text-rose-500" /> Database Lirik & Proyektor (Presenter Mode)
           </h2>
-          <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 font-medium">Koleksi lirik, chord lagu pujian, dan fitur transpose nada.</p>
         </div>
         <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Lagu</Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-sm">
-        <div className="w-full sm:w-80">
-          <Input 
-            placeholder="Cari judul lagu atau lirik..." 
-            value={searchQuery} 
-            onChange={(e: any) => setSearchQuery(e.target.value)} 
-          />
+      {isPresenterMode && selectedSong && (
+        <div className="fixed inset-0 bg-slate-950 z-50 flex flex-col items-center justify-center p-8 text-center animate-in fade-in">
+          <button onClick={() => setIsPresenterMode(false)} className="absolute top-6 right-6 text-white bg-slate-800 p-3 rounded-full hover:bg-slate-700"><X className="w-8 h-8"/></button>
+          <span className="text-indigo-400 font-bold uppercase tracking-widest text-sm mb-4">Live Presenter Mode • Key: {selectedSong.key}</span>
+          <h2 className="text-3xl font-black text-white mb-8">{selectedSong.title}</h2>
+          <div className="max-w-4xl w-full max-h-[70vh] overflow-y-auto px-4">
+            <p className="text-3xl md:text-5xl font-extrabold text-slate-100 whitespace-pre-wrap leading-relaxed font-sans">
+              {selectedSong.lyrics.replace(/\[(.*?)\]/g, '')}
+            </p>
+          </div>
         </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-          Menampilkan {paginatedSongs.length} dari total {filteredSongs.length} lagu {searchQuery && `(hasil pencarian "${searchQuery}")`}
-        </div>
-      </div>
+      )}
 
-      {selectedSong && (
+      {selectedSong && !isPresenterMode && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative border border-slate-200 dark:border-slate-800">
-            <button onClick={() => { setSelectedSong(null); setTransposeStep(0); }} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white p-2"><X className="w-6 h-6"/></button>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative border">
+            <button onClick={() => setSelectedSong(null)} className="absolute top-4 right-4"><X className="w-6 h-6"/></button>
+            <h3 className="text-2xl font-black mb-2">{selectedSong.title}</h3>
+            <Badge color="rose">Key: {selectedSong.key}</Badge>
             
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-2">
-                <Badge color="rose">Original Key: {selectedSong.key}</Badge>
-                {transposeStep !== 0 && <Badge color="indigo">Transpose: {transposeStep > 0 ? `+${transposeStep}` : transposeStep}</Badge>}
-              </div>
-
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                <span className="text-xs font-bold px-2 text-slate-500">Chord:</span>
-                <button onClick={() => setTransposeStep(prev => prev - 1)} className="px-2.5 py-1 text-xs font-bold bg-white dark:bg-slate-700 rounded-lg shadow">-</button>
-                <button onClick={() => setTransposeStep(0)} className="px-2.5 py-1 text-xs font-bold text-slate-600 dark:text-slate-300">Reset</button>
-                <button onClick={() => setTransposeStep(prev => prev + 1)} className="px-2.5 py-1 text-xs font-bold bg-white dark:bg-slate-700 rounded-lg shadow">+</button>
-              </div>
+            <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4 rounded-xl my-4 font-mono text-sm whitespace-pre-wrap">
+              {selectedSong.lyrics}
             </div>
 
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4">{selectedSong.title}</h3>
-            
-            <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-              <pre className="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                {getTransformedLyrics(selectedSong.lyrics || 'Tidak ada lirik.')}
-              </pre>
-            </div>
-
-            <div className="mt-6 flex justify-between items-center">
-              <Button variant="danger" onClick={() => { if (confirm('Hapus lagu?')) { onDelete(selectedSong.id); setSelectedSong(null); } }}>
-                <Trash2 className="w-4 h-4" /> Hapus Lagu
+            <div className="flex justify-between items-center">
+              <Button variant="primary" onClick={() => setIsPresenterMode(true)}>
+                <Monitor className="w-4 h-4" /> Buka Tampilan Proyektor (Presenter)
               </Button>
-              <Button onClick={() => { setSelectedSong(null); setTransposeStep(0); }} variant="secondary">Tutup</Button>
+              <Button variant="secondary" onClick={() => setSelectedSong(null)}>Tutup</Button>
             </div>
           </div>
         </div>
@@ -1444,92 +1088,101 @@ const WorshipSongLibraryView = ({ songs, onAdd, onDelete }: any) => {
 
       {isAdding && (
         <Card className="border-rose-500/50">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); onAdd(formData); setIsAdding(false); setFormData({ title: '', key: 'C', lyrics: '' }); }} className="space-y-4">
             <div className="flex gap-4">
               <Input label="Judul Lagu" required value={formData.title} onChange={(e:any) => setFormData({...formData, title: e.target.value})} className="flex-1" />
               <Input label="Nada Dasar" required value={formData.key} onChange={(e:any) => setFormData({...formData, key: e.target.value})} className="w-24" />
             </div>
-            <Textarea label="Lirik & Chord (Cth: [C] [G])" rows={6} value={formData.lyrics} onChange={(e:any) => setFormData({...formData, lyrics: e.target.value})} />
+            <Textarea label="Lirik" rows={6} value={formData.lyrics} onChange={(e:any) => setFormData({...formData, lyrics: e.target.value})} />
             <div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan</Button></div>
           </form>
         </Card>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {paginatedSongs.map((s: Song) => (
-          <Card key={s.id} onClick={() => { setSelectedSong(s); setTransposeStep(0); }} className="group relative overflow-hidden cursor-pointer hover:border-rose-500/50 transition-all">
-            <div className="absolute top-0 right-0 bg-rose-500 text-white font-bold text-xs px-3 py-1 rounded-bl-xl shadow-md">Key: {s.key}</div>
-            <h3 className="font-bold text-lg text-slate-900 dark:text-white mt-2 pr-8">{s.title}</h3>
-            <p className="text-xs text-slate-500 mt-3 font-mono whitespace-pre-wrap line-clamp-4">{s.lyrics || 'Lirik belum tersedia.'}</p>
+        {songs.map((s: Song) => (
+          <Card key={s.id} onClick={() => setSelectedSong(s)} className="cursor-pointer hover:border-rose-500/50">
+            <Badge color="rose">Key: {s.key}</Badge>
+            <h3 className="font-bold text-lg mt-2">{s.title}</h3>
+            <p className="text-xs text-slate-500 mt-2 line-clamp-3 font-mono">{s.lyrics}</p>
           </Card>
         ))}
-        {paginatedSongs.length === 0 && (
-          <div className="col-span-full py-12 text-center text-slate-500 italic">
-            Tidak ada lagu yang ditemukan sesuai pencarian.
-          </div>
-        )}
       </div>
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
-          <Button 
-            variant="secondary" 
-            disabled={currentPage === 1} 
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          >
-            ← Sebelumnya
-          </Button>
-          
-          <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-            Halaman {currentPage} dari {totalPages}
-          </span>
-
-          <Button 
-            variant="secondary" 
-            disabled={currentPage === totalPages} 
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-          >
-            Berikutnya →
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
 
-const MinistryRotaView = ({ schedules, onAdd }: any) => {
+const LiturgyBuilderView = ({ liturgies, onAdd }: any) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState({ date: '', event: 'Ibadah Pemuda', wl: '', musicians: '', multimedia: '' });
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onAdd(formData); setIsAdding(false); };
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState('');
+  const [theme, setTheme] = useState('');
+  const [preacher, setPreacher] = useState('');
+  const [wl, setWl] = useState('');
+  const [items, setItems] = useState<{ order: number; time: string; activity: string; leader: string; }[]>([]);
+
+  const addItem = () => setItems([...items, { order: items.length + 1, time: '10 Menit', activity: 'Pujian Pembuka', leader: 'WL' }]);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><CalendarDays className="w-8 h-8 text-indigo-500" /> Jadwal Petugas</h2>
-        <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Buat Rota</Button>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><FileText className="w-8 h-8 text-indigo-500" /> Susunan Liturgi Ibadah (Order of Service)</h2>
+        <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Buat Liturgi Baru</Button>
       </div>
+
       {isAdding && (
         <Card className="border-indigo-500/50">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Tanggal" type="date" required value={formData.date} onChange={(e:any) => setFormData({...formData, date: e.target.value})} />
-            <Input label="Acara" required value={formData.event} onChange={(e:any) => setFormData({...formData, event: e.target.value})} />
-            <Input label="Worship Leader (WL)" value={formData.wl} onChange={(e:any) => setFormData({...formData, wl: e.target.value})} />
-            <Input label="Pemusik" value={formData.musicians} onChange={(e:any) => setFormData({...formData, musicians: e.target.value})} />
-            <Input label="Multimedia & Sound" className="md:col-span-2" value={formData.multimedia} onChange={(e:any) => setFormData({...formData, multimedia: e.target.value})} />
-            <div className="md:col-span-2 flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan</Button></div>
+          <form onSubmit={(e) => { e.preventDefault(); onAdd({ title, date, theme, preacher, wl, items }); setIsAdding(false); }} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input label="Judul Ibadah" required value={title} onChange={(e:any) => setTitle(e.target.value)} placeholder="Ibadah Pemuda Raya" />
+              <Input label="Tanggal" type="date" required value={date} onChange={(e:any) => setDate(e.target.value)} />
+              <Input label="Tema Ibadah" value={theme} onChange={(e:any) => setTheme(e.target.value)} />
+              <Input label="Pengkhotbah / Pendeta" value={preacher} onChange={(e:any) => setPreacher(e.target.value)} />
+            </div>
+
+            <div className="border-t pt-4">
+              <h3 className="font-bold text-sm mb-2">Susunan Acara</h3>
+              {items.map((item, idx) => (
+                <div key={idx} className="flex gap-2 mb-2 items-center">
+                  <span className="font-mono font-bold text-xs">#{item.order}</span>
+                  <input className="bg-slate-50 dark:bg-slate-950 border rounded p-2 text-xs flex-1" placeholder="Nama Acara/Pujian" value={item.activity} onChange={(e) => {
+                    const newItems = [...items]; newItems[idx].activity = e.target.value; setItems(newItems);
+                  }} />
+                  <input className="bg-slate-50 dark:bg-slate-950 border rounded p-2 text-xs w-32" placeholder="Petugas" value={item.leader} onChange={(e) => {
+                    const newItems = [...items]; newItems[idx].leader = e.target.value; setItems(newItems);
+                  }} />
+                </div>
+              ))}
+              <Button type="button" variant="secondary" onClick={addItem} className="mt-2"><Plus className="w-3.5 h-3.5"/> Tambah Baris Acara</Button>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan Liturgi</Button></div>
           </form>
         </Card>
       )}
+
       <div className="space-y-4">
-        {schedules.map((s: Rota) => (
-          <Card key={s.id} className="flex flex-col sm:flex-row gap-4">
-            <div className="sm:w-1/4 border-r border-slate-200 dark:border-slate-800 pr-4">
-              <Badge color="indigo">{s.event}</Badge>
-              <p className="font-bold mt-2 text-slate-900 dark:text-white">{new Date(s.date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+        {liturgies?.map((l: LiturgyItem) => (
+          <Card key={l.id} className="space-y-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <Badge color="indigo">{l.date}</Badge>
+                <h3 className="text-lg font-bold mt-1">{l.title}</h3>
+                <p className="text-xs text-slate-500">Tema: {l.theme || '-'} • Pengkhotbah: {l.preacher || '-'}</p>
+              </div>
+              <Button variant="secondary" onClick={() => {
+                const text = ` liturgical: ${l.title} (${l.date})\nTema: ${l.theme}\n\n` + l.items?.map((i:any) => `${i.order}. ${i.activity} (${i.leader})`).join('\n');
+                navigator.clipboard.writeText(text);
+                alert('Susunan liturgi disalin ke clipboard!');
+              }}>Salin Teks</Button>
             </div>
-            <div className="flex-1 grid grid-cols-2 gap-4 text-sm text-slate-700 dark:text-slate-300">
-              <div><span className="font-semibold text-slate-500 block mb-1">🎤 WL</span>{s.wl || '-'}</div>
-              <div><span className="font-semibold text-slate-500 block mb-1">🎹 Pemusik</span>{s.musicians || '-'}</div>
-              <div className="col-span-2"><span className="font-semibold text-slate-500 block mb-1">💻 Media & Sound</span>{s.multimedia || '-'}</div>
+            <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl text-xs space-y-1">
+              {l.items?.map((i:any, idx:number) => (
+                <div key={idx} className="flex justify-between py-1 border-b last:border-0 border-slate-200 dark:border-slate-800">
+                  <span><b>#{i.order}</b> {i.activity}</span>
+                  <span className="text-slate-500 font-mono">Petugas: {i.leader}</span>
+                </div>
+              ))}
             </div>
           </Card>
         ))}
@@ -1538,91 +1191,53 @@ const MinistryRotaView = ({ schedules, onAdd }: any) => {
   );
 };
 
-const PrayerWallView = ({ prayers, onAdd, onPray }: any) => {
-  const [content, setContent] = useState('');
-  const [supportedPrayers, setSupportedPrayers] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('komda_supported_prayers');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
-
-  const handlePrayClick = (prayerId: string, currentCount: number) => {
-    if (supportedPrayers.includes(prayerId)) return;
-    onPray(prayerId, currentCount);
-    const updated = [...supportedPrayers, prayerId];
-    setSupportedPrayers(updated);
-    try { localStorage.setItem('komda_supported_prayers', JSON.stringify(updated)); } catch (e) {}
-  };
-
-  const handleSendToDiscord = async (prayer: Prayer) => {
-    try {
-      const discordMsg = `🙏 **POKOK DOA JEMAAT - KOMDA HUB**\n\n> "${prayer.content}"\n\n❤️ **Dukungan Doa:** ${prayer.prayCount} orang\n📅 **Tanggal:** ${new Date(prayer.date).toLocaleDateString('id-ID')}`;
-      
-      const response = await fetch(PERMANENT_DISCORD_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: discordMsg })
-      });
-
-      if (response.ok || response.status === 204) {
-        alert('Pokok doa berhasil dibagikan ke Discord!');
-      } else {
-        alert('Gagal mengirim ke Discord.');
-      }
-    } catch (err) {
-      alert('Terjadi kesalahan jaringan.');
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => { 
-    e.preventDefault(); 
-    onAdd({ author: 'Jemaat', content, date: new Date().toISOString(), prayCount: 0 }); 
-    setContent(''); 
-  };
+const PollsView = ({ polls, onAdd, onVote }: any) => {
+  const [isAdding, setIsAdding] = useState(false);
+  const [question, setQuestion] = useState('');
+  const [options, setOptions] = useState(['', '']);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-3xl mx-auto">
-      <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><Heart className="w-8 h-8 text-rose-500" /> Direktori Doa</h2>
-      <Card className="bg-gradient-to-r from-rose-500/10 to-transparent">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Input placeholder="Tuliskan pokok doa Anda..." value={content} onChange={(e:any) => setContent(e.target.value)} required />
-          <Button type="submit" variant="danger" className="mt-6"><Send className="w-4 h-4"/></Button>
-        </form>
-      </Card>
-      <div className="space-y-4">
-        {prayers.map((p: Prayer) => {
-          const isSupported = supportedPrayers.includes(p.id);
-          return (
-            <Card key={p.id} className="relative space-y-4">
-              <p className="text-slate-800 dark:text-slate-200 italic text-base">"{p.content}"</p>
-              
-              <div className="flex flex-wrap justify-between items-center text-xs text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800 gap-2">
-                <span>📅 {new Date(p.date).toLocaleDateString()}</span>
-                
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => handleSendToDiscord(p)} 
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold bg-[#5865F2]/10 text-[#5865F2] hover:bg-[#5865F2]/20 transition-colors border border-[#5865F2]/20"
-                    title="Kirim pokok doa dan jumlah dukungan ke Discord"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" /> Kirim ke Discord
-                  </button>
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><Vote className="w-8 h-8 text-emerald-500" /> Polling & Voting Kepengurusan</h2>
+        <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Buat Polling</Button>
+      </div>
 
-                  <button 
-                    onClick={() => handlePrayClick(p.id, p.prayCount)} 
-                    disabled={isSupported}
-                    className={`flex items-center gap-1.5 transition-colors px-3.5 py-1.5 rounded-full font-bold ${
-                      isSupported ? 'bg-rose-500/20 text-rose-500 cursor-not-allowed border border-rose-500/30' : 'bg-slate-100 dark:bg-slate-800 hover:text-rose-500 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <Heart className={`w-4 h-4 ${isSupported ? 'fill-rose-500 text-rose-500' : ''}`} /> 
-                    {isSupported ? `Didukung (${p.prayCount})` : `Mendukung (${p.prayCount})`}
-                  </button>
-                </div>
+      {isAdding && (
+        <Card className="border-emerald-500/50">
+          <form onSubmit={(e) => { e.preventDefault(); onAdd({ question, options: options.filter(o => o.trim() !== '').map(o => ({ text: o, votes: 0 })), voters: [], isOpen: true }); setIsAdding(false); }} className="space-y-4">
+            <Input label="Pertanyaan Polling" required value={question} onChange={(e:any) => setQuestion(e.target.value)} placeholder="Mau pilih tema retret mana?" />
+            <label className="block text-xs font-semibold uppercase">Pilihan Opsi:</label>
+            {options.map((opt, idx) => (
+              <Input key={idx} value={opt} onChange={(e) => { const newOpts = [...options]; newOpts[idx] = e.target.value; setOptions(newOpts); }} placeholder={`Opsi ${idx + 1}`} />
+            ))}
+            <Button type="button" variant="secondary" onClick={() => setOptions([...options, ''])}><Plus className="w-3.5 h-3.5"/> Tambah Opsi</Button>
+            <div className="flex justify-end gap-2 pt-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button variant="emerald" type="submit">Publikasikan Polling</Button></div>
+          </form>
+        </Card>
+      )}
+
+      <div className="space-y-4">
+        {polls?.map((p: PollItem) => {
+          const totalVotes = p.options.reduce((sum, o) => sum + o.votes, 0);
+          return (
+            <Card key={p.id} className="space-y-4">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{p.question}</h3>
+              <div className="space-y-2">
+                {p.options.map((opt, idx) => {
+                  const percent = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+                  return (
+                    <div key={idx} onClick={() => onVote(p.id, idx)} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border cursor-pointer hover:border-emerald-500 transition-all relative overflow-hidden">
+                      <div className="absolute left-0 top-0 bottom-0 bg-emerald-500/10 transition-all" style={{ width: `${percent}%` }}></div>
+                      <div className="flex justify-between items-center relative z-10 text-xs font-bold">
+                        <span>{opt.text}</span>
+                        <span className="font-mono">{opt.votes} suara ({percent}%)</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+              <p className="text-[11px] text-slate-400 text-right">Total suara masuk: {totalVotes}</p>
             </Card>
           );
         })}
@@ -1631,53 +1246,40 @@ const PrayerWallView = ({ prayers, onAdd, onPray }: any) => {
   );
 };
 
-const TaskBoardView = ({ tasks, onAdd, onUpdateStatus }: any) => {
+const GuestBookView = ({ guests, onAdd }: any) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState({ title: '', assignee: '', status: 'To Do', event: '' });
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onAdd(formData); setIsAdding(false); };
-  
-  const renderColumn = (status: string, colorClass: string) => (
-    <div className="bg-slate-100 dark:bg-slate-900/50 rounded-2xl p-4 min-h-[300px]">
-      <h3 className={`font-bold text-sm uppercase tracking-widest mb-4 flex items-center gap-2 ${colorClass}`}><div className={`w-2 h-2 rounded-full ${colorClass.split(' ')[0].replace('text', 'bg')}`}></div> {status}</h3>
-      <div className="space-y-3">
-        {tasks.filter((t: Task) => t.status === status).map((t: Task) => (
-          <Card key={t.id} className="p-3 shadow-sm">
-            <Badge color="slate">{t.event}</Badge>
-            <p className="font-bold text-sm mt-2 text-slate-900 dark:text-white">{t.title}</p>
-            <div className="flex justify-between items-center mt-3 border-t border-slate-100 dark:border-slate-800 pt-2">
-              <span className="text-xs text-slate-500">{t.assignee}</span>
-              <select className="text-xs bg-transparent text-indigo-500 font-bold focus:outline-none" value={t.status} onChange={(e) => onUpdateStatus(t.id, e.target.value)}>
-                <option value="To Do" className="bg-white dark:bg-slate-900">To Do</option>
-                <option value="In Progress" className="bg-white dark:bg-slate-900">In Progress</option>
-                <option value="Done" className="bg-white dark:bg-slate-900">Done</option>
-              </select>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
+  const [formData, setFormData] = useState({ name: '', contact: '', churchOrigin: 'GKJ Slogohimo', visitDate: new Date().toISOString().split('T')[0], notes: '' });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><ListTodo className="w-8 h-8 text-emerald-500" /> Papan Tugas</h2>
-        <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Buat Tugas</Button>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3"><BookOpen className="w-8 h-8 text-cyan-500" /> Buku Tamu & Absensi Simpatisan</h2>
+        <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Catat Tamu Baru</Button>
       </div>
+
       {isAdding && (
-        <Card className="border-emerald-500/50">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Judul Tugas" required value={formData.title} onChange={(e:any) => setFormData({...formData, title: e.target.value})} />
-            <Input label="PIC" value={formData.assignee} onChange={(e:any) => setFormData({...formData, assignee: e.target.value})} />
-            <Input label="Untuk Acara" value={formData.event} onChange={(e:any) => setFormData({...formData, event: e.target.value})} className="md:col-span-2" />
-            <div className="md:col-span-2 flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan</Button></div>
+        <Card className="border-cyan-500/50">
+          <form onSubmit={(e) => { e.preventDefault(); onAdd(formData); setIsAdding(false); }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Nama Lengkap" required value={formData.name} onChange={(e:any) => setFormData({...formData, name: e.target.value})} />
+            <Input label="Kontak / WhatsApp" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} />
+            <Input label="Asal Gereja / Komunitas" value={formData.churchOrigin} onChange={(e:any) => setFormData({...formData, churchOrigin: e.target.value})} />
+            <Input label="Tanggal Kunjungan" type="date" value={formData.visitDate} onChange={(e:any) => setFormData({...formData, visitDate: e.target.value})} />
+            <Textarea label="Catatan / Kesan" value={formData.notes} onChange={(e:any) => setFormData({...formData, notes: e.target.value})} className="md:col-span-2" />
+            <div className="md:col-span-2 flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan Tamu</Button></div>
           </form>
         </Card>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {renderColumn('To Do', 'text-slate-500')}
-        {renderColumn('In Progress', 'text-amber-500')}
-        {renderColumn('Done', 'text-emerald-500')}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {guests?.map((g: GuestItem) => (
+          <Card key={g.id}>
+            <Badge color="cyan">{g.visitDate}</Badge>
+            <h3 className="font-bold text-lg mt-2">{g.name}</h3>
+            <p className="text-xs text-slate-500 mt-1">Asal: {g.churchOrigin}</p>
+            <p className="text-xs text-slate-400 font-mono mt-0.5">{g.contact}</p>
+            {g.notes && <p className="text-xs italic bg-slate-50 dark:bg-slate-950 p-2 rounded mt-3">"{g.notes}"</p>}
+          </Card>
+        ))}
       </div>
     </div>
   );
@@ -1686,11 +1288,11 @@ const TaskBoardView = ({ tasks, onAdd, onUpdateStatus }: any) => {
 const NavGroup = ({ title, isOpen, onToggle, children }: any) => {
   return (
     <div className="mb-2">
-      <button onClick={onToggle} className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 uppercase tracking-widest transition-colors group">
+      <button onClick={onToggle} className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors group">
         <span>{title}</span>
-        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isOpen ? 'rotate-180 text-indigo-500 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-500 dark:group-hover:text-slate-300'}`} />
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isOpen ? 'rotate-180 text-indigo-500' : 'text-slate-400'}`} />
       </button>
-      <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+      <div className={`space-y-1 overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
         {children}
       </div>
     </div>
@@ -1715,32 +1317,28 @@ export default function App() {
   const [schedules, setSchedules] = useState<Rota[]>([]);
   const [prayers, setPrayers] = useState<Prayer[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [liturgies, setLiturgies] = useState<LiturgyItem[]>([]);
+  const [polls, setPolls] = useState<PollItem[]>([]);
+  const [guests, setGuests] = useState<GuestItem[]>([]);
   const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
 
   const currentUserRole = useMemo(() => {
     if (!user || !user.email) return 'Anggota';
     const emailLower = user.email.trim().toLowerCase();
-    
     if (emailLower === OWNER_EMAIL.toLowerCase()) return 'Super Admin';
-    
     const matchedMember = members.find(m => m.id === user.uid || m.contact?.toLowerCase() === emailLower);
-    if (matchedMember && matchedMember.role === 'Super Admin') {
-      return 'Super Admin';
-    }
-    
+    if (matchedMember && matchedMember.role === 'Super Admin') return 'Super Admin';
     return matchedMember ? matchedMember.role : 'Anggota';
   }, [user, members]);
 
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     utama: true,
-    pelayanan: false,
-    inventaris: false,
-    sistem: false
+    pelayanan: true,
+    inventaris: true,
+    sistem: true
   });
 
-  const toggleMenu = (key: string) => {
-    setExpandedMenus(prev => ({ ...prev, [key]: !prev[key] }))
-  };
+  const toggleMenu = (key: string) => setExpandedMenus(prev => ({ ...prev, [key]: !prev[key] }));
 
   const currentMemberProfile = useMemo(() => {
     if (!user) return null;
@@ -1752,16 +1350,6 @@ export default function App() {
     if (isDarkMode) root.classList.add('dark');
     else root.classList.remove('dark');
   }, [isDarkMode]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsProfileDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -1784,39 +1372,18 @@ export default function App() {
       onSnapshot(getColRef('songs'), s => setSongs(s.docs.map(d => ({ id: d.id, ...d.data() }) as Song))),
       onSnapshot(getColRef('schedules'), s => setSchedules(s.docs.map(d => ({ id: d.id, ...d.data() }) as Rota))),
       onSnapshot(getColRef('prayers'), s => setPrayers(s.docs.map(d => ({ id: d.id, ...d.data() }) as Prayer))),
-      onSnapshot(getColRef('tasks'), s => setTasks(s.docs.map(d => ({ id: d.id, ...d.data() }) as Task)))
+      onSnapshot(getColRef('tasks'), s => setTasks(s.docs.map(d => ({ id: d.id, ...d.data() }) as Task))),
+      onSnapshot(getColRef('liturgies'), s => setLiturgies(s.docs.map(d => ({ id: d.id, ...d.data() }) as LiturgyItem))),
+      onSnapshot(getColRef('polls'), s => setPolls(s.docs.map(d => ({ id: d.id, ...d.data() }) as PollItem))),
+      onSnapshot(getColRef('guests'), s => setGuests(s.docs.map(d => ({ id: d.id, ...d.data() }) as GuestItem)))
     ];
 
     return () => unsubs.forEach(unsub => unsub());
   }, [user]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   const handleAddDoc = async (colName: string, data: any) => { if (user) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', colName), data); };
-  const handleDeleteDoc = async (colName: string, docId: string) => { 
-    if (currentUserRole !== 'Super Admin') {
-      alert("Akses ditolak! Hanya Super Admin yang dapat menghapus data.");
-      return;
-    }
-    if (user) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', colName, docId)); 
-  };
+  const handleDeleteDoc = async (colName: string, docId: string) => { if (user) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', colName, docId)); };
   const handleUpdateDoc = async (colName: string, docId: string, data: any) => { if (user) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', colName, docId), data); };
-
-  const handleSaveProfile = async (targetId: string, profileData: any) => {
-    if (!user) return;
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', user.uid);
-    const payload = {
-      ...profileData,
-      contact: (profileData.contact || user.email || '').toLowerCase()
-    };
-    await setDoc(docRef, payload, { merge: true });
-  };
 
   const dashboardStats = useMemo(() => {
     const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount || 0), 0);
@@ -1825,50 +1392,49 @@ export default function App() {
   }, [members, transactions, inventory]);
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mb-4"></div>
       <p className="text-sm font-semibold tracking-wider">Loading KOMDA HUB Engine...</p>
     </div>
   );
 
-  if (!user) {
-    return <AuthView onAuthSuccess={(u) => setUser(u)} />;
-  }
+  if (!user) return <AuthView onAuthSuccess={(u) => setUser(u)} />;
 
-  const NavItem = ({ icon: Icon, label, view, isActive, colorClass = "text-slate-500 dark:text-slate-400" }: any) => (
-    <button onClick={() => { setCurrentView(view); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all duration-200 text-sm font-medium ${isActive ? 'bg-indigo-600 text-white shadow-lg' : `${colorClass} hover:bg-slate-100 dark:hover:bg-slate-800/60`}`}>
+  const NavItem = ({ icon: Icon, label, view, isActive }: any) => (
+    <button onClick={() => { setCurrentView(view); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${isActive ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'}`}>
       <Icon className="w-4 h-4" /><span>{label}</span>
     </button>
   );
 
   return (
-    <div className={`min-h-screen font-sans flex transition-colors duration-300 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`min-h-screen font-sans flex ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       {isSidebarOpen && <div className="fixed inset-0 bg-black/70 z-40 lg:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />}
 
-      <aside className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-        <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+      <aside className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-slate-900/95 backdrop-blur-xl border-r border-slate-800 z-50 flex flex-col transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="p-5 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg bg-white flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-white flex items-center justify-center">
               <img src={LOGO_URL} alt="Logo" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="text-lg font-black tracking-wider text-slate-900 dark:text-white">KOMDA HUB</h1>
-              <span className="text-[10px] uppercase font-bold text-indigo-500 tracking-widest block -mt-1">Church Engine</span>
+              <h1 className="text-lg font-black tracking-wider text-white">KOMDA HUB</h1>
+              <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-widest block -mt-1">Church Engine</span>
             </div>
           </div>
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400"><X className="w-5 h-5" /></button>
         </div>
 
-        <nav className="flex-1 px-3 space-y-1 overflow-y-auto py-4 custom-scrollbar">
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto py-4">
           <NavGroup title="Utama" isOpen={expandedMenus.utama} onToggle={() => toggleMenu('utama')}>
             <NavItem icon={LayoutDashboard} label="Dashboard" view="dashboard" isActive={currentView === 'dashboard'} />
-            <NavItem icon={Trophy} label="Anggota & QR ID" view="members" isActive={currentView === 'members'} />
-            <NavItem icon={DollarSign} label="Kas & Keuangan" view="finance" isActive={currentView === 'finance'} />
+            <NavItem icon={Trophy} label="Anggota & Leaderboard" view="members" isActive={currentView === 'members'} />
+            <NavItem icon={DollarSign} label="Keuangan & Persembahan" view="finance" isActive={currentView === 'finance'} />
           </NavGroup>
 
-          <NavGroup title="Pelayanan & Rohani" isOpen={expandedMenus.pelayanan} onToggle={() => toggleMenu('pelayanan')}>
+          <NavGroup title="Pelayanan & Ibadah" isOpen={expandedMenus.pelayanan} onToggle={() => toggleMenu('pelayanan')}>
             <NavItem icon={CalendarDays} label="Jadwal Petugas" view="rota" isActive={currentView === 'rota'} />
-            <NavItem icon={Music} label="Database Lirik" view="songs" isActive={currentView === 'songs'} />
+            <NavItem icon={FileText} label="Susunan Liturgi" view="liturgy" isActive={currentView === 'liturgy'} />
+            <NavItem icon={Music} label="Database Lirik & Proyektor" view="songs" isActive={currentView === 'songs'} />
             <NavItem icon={Heart} label="Direktori Doa" view="prayers" isActive={currentView === 'prayers'} />
             <NavItem icon={ListTodo} label="Papan Tugas" view="tasks" isActive={currentView === 'tasks'} />
           </NavGroup>
@@ -1877,117 +1443,69 @@ export default function App() {
             <NavItem icon={Speaker} label="Sound System" view="inventory_sound" isActive={currentView === 'inventory_sound'} />
             <NavItem icon={Camera} label="Multimedia" view="inventory_media" isActive={currentView === 'inventory_media'} />
             <NavItem icon={Armchair} label="Properti" view="inventory_property" isActive={currentView === 'inventory_property'} />
-            <NavItem icon={ArrowRightLeft} label="Sistem Peminjaman" view="borrowing" isActive={currentView === 'borrowing'} />
+            <NavItem icon={ArrowRightLeft} label="Peminjaman & Check-in" view="borrowing" isActive={currentView === 'borrowing'} />
           </NavGroup>
 
-          <NavGroup title="Sistem & Notifikasi" isOpen={expandedMenus.sistem} onToggle={() => toggleMenu('sistem')}>
+          <NavGroup title="Komunitas & Sistem" isOpen={expandedMenus.sistem} onToggle={() => toggleMenu('sistem')}>
             <NavItem icon={CalendarIcon} label="Agenda Gereja" view="calendar" isActive={currentView === 'calendar'} />
+            <NavItem icon={Vote} label="Polling & Voting" view="polls" isActive={currentView === 'polls'} />
+            <NavItem icon={BookOpen} label="Buku Tamu Simpatisan" view="guests" isActive={currentView === 'guests'} />
             <NavItem icon={MessageSquare} label="Discord Broadcast" view="discord_webhook" isActive={currentView === 'discord_webhook'} />
           </NavGroup>
         </nav>
 
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-[11px] text-slate-500 truncate font-mono" title={user.email || ''}>{user.email}</span>
-          </div>
-          <button onClick={handleLogout} className="w-full py-2 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center justify-center gap-2 transition-colors border border-rose-500/20">
+        <div className="p-4 border-t border-slate-800 bg-slate-950/50">
+          <button onClick={() => signOut(auth)} className="w-full py-2 px-3 rounded-lg bg-rose-500/10 text-rose-400 text-xs font-bold flex items-center justify-center gap-2 border border-rose-500/20">
             <LogOut className="w-3.5 h-3.5" /> Keluar (Logout)
           </button>
         </div>
       </aside>
 
       <main 
-        className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto text-slate-900 dark:text-slate-100 relative bg-cover bg-center bg-fixed"
-        style={{
-          backgroundImage: isDarkMode 
-            ? `linear-gradient(to bottom, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.92)), url('${DARK_WALLPAPER}')`
-            : `linear-gradient(to bottom, rgba(255, 255, 255, 0.50), rgba(241, 245, 249, 0.65)), url('${LIGHT_WALLPAPER}')`
-        }}
+        className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto relative bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: `linear-gradient(to bottom, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.92)), url('${DARK_WALLPAPER}')` }}
       >
-        <header className="bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between shadow-sm">
+        <header className="bg-slate-900/85 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"><Menu className="w-6 h-6" /></button>
-            <button onClick={() => setCurrentView('dashboard')} className="hidden sm:flex items-center gap-2 group transition-all">
-              <div className="w-7 h-7 rounded-lg overflow-hidden shadow-lg bg-white flex items-center justify-center group-hover:scale-105 transition-transform">
-                <img src={LOGO_URL} alt="Logo" className="w-full h-full object-cover" />
-              </div>
-              <span className="text-sm font-black tracking-widest uppercase text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">KOMDA HUB</span>
-            </button>
+            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-slate-400"><Menu className="w-6 h-6" /></button>
+            <span className="text-sm font-black tracking-widest uppercase text-white">KOMDA HUB • GKJ SLOGOHIMO</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className={`text-xs px-3 py-1.5 rounded-lg font-bold border hidden sm:inline-block ${
-              currentUserRole === 'Super Admin' 
-                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30' 
-                : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20'
-            }`}>
-              Role: {currentUserRole}
+            <span className="text-xs px-3 py-1.5 rounded-lg font-bold border bg-purple-500/10 text-purple-400 border-purple-500/30">
+              {currentUserRole}
             </span>
 
-            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
-              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+            <button onClick={() => setCurrentView('profile')} className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">
+              <div className="w-7 h-7 rounded-full overflow-hidden bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
+                {currentMemberProfile?.photoUrl ? <img src={currentMemberProfile.photoUrl} alt="P" className="w-full h-full object-cover" /> : user.email?.substring(0,2).toUpperCase()}
+              </div>
+              <span className="text-xs font-bold text-slate-200 hidden md:inline-block">{currentMemberProfile?.name || user.email?.split('@')[0]}</span>
             </button>
-
-            <div className="relative" ref={dropdownRef}>
-              <button 
-                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
-              >
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
-                  {currentMemberProfile?.photoUrl ? (
-                    <img src={currentMemberProfile.photoUrl} alt="Profil" className="w-full h-full object-cover" />
-                  ) : (
-                    <span>{currentMemberProfile?.name ? currentMemberProfile.name.substring(0, 2).toUpperCase() : user.email?.substring(0, 2).toUpperCase()}</span>
-                  )}
-                </div>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 hidden md:inline-block max-w-[110px] truncate">
-                  {currentMemberProfile?.name || user.email?.split('@')[0]}
-                </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{currentMemberProfile?.name || 'User'}</p>
-                    <p className="text-[10px] text-slate-500 font-mono truncate">{user.email}</p>
-                  </div>
-                  <button 
-                    onClick={() => { setCurrentView('profile'); setIsProfileDropdownOpen(false); }}
-                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-slate-800 flex items-center gap-2 transition-colors"
-                  >
-                    <UserCheck className="w-4 h-4 text-indigo-500" /> Profil Saya
-                  </button>
-                  <button 
-                    onClick={() => { handleLogout(); setIsProfileDropdownOpen(false); }}
-                    className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-2 transition-colors border-t border-slate-100 dark:border-slate-800 mt-1"
-                  >
-                    <LogOut className="w-4 h-4" /> Keluar (Logout)
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
         </header>
 
         <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full flex-1 relative z-10">
           {currentView === 'dashboard' && <DashboardView stats={dashboardStats} events={events} onNavigate={setCurrentView} />}
-          {currentView === 'profile' && <ProfileView user={user} members={members} onSaveProfile={handleSaveProfile} />}
+          {currentView === 'profile' && <ProfileView user={user} members={members} onSaveProfile={(id:string, d:any) => setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', user.uid), d, {merge:true})} />}
           {currentView === 'members' && <MembersView members={members} onAdd={(d: any) => handleAddDoc('members', d)} onDelete={(id: string) => handleDeleteDoc('members', id)} onUpdateXP={(id: string, newXp: number) => handleUpdateDoc('members', id, { xp: newXp })} onUpdateMember={(id: string, data: any) => handleUpdateDoc('members', id, data)} currentUserRole={currentUserRole} />}
           {currentView === 'finance' && <FinanceView transactions={transactions} stats={dashboardStats} onAdd={(d: any) => handleAddDoc('transactions', d)} />}
-          
           {currentView === 'inventory_sound' && <InventoryView category="Sound System" items={inventory.filter(i => i.category === 'Sound System')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} selectedGearQR={selectedGearQR} setSelectedGearQR={setSelectedGearQR} />}
           {currentView === 'inventory_media' && <InventoryView category="Multimedia" items={inventory.filter(i => i.category === 'Multimedia')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} selectedGearQR={selectedGearQR} setSelectedGearQR={setSelectedGearQR} />}
           {currentView === 'inventory_property' && <InventoryView category="Properti" items={inventory.filter(i => i.category === 'Properti')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} selectedGearQR={selectedGearQR} setSelectedGearQR={setSelectedGearQR} />}
-          
-          {currentView === 'borrowing' && <BorrowingView borrowings={borrowings} inventory={inventory} onAdd={(d: any) => handleAddDoc('borrowings', d)} onUpdateStatus={(id: string, s: string) => handleUpdateDoc('borrowings', id, { status: s })} />}
+          {currentView === 'borrowing' && <BorrowingView borrowings={borrowings} inventory={inventory} onAdd={(d: any) => handleAddDoc('borrowings', d)} onUpdateStatus={(id: string, s: string, cond?: string) => handleUpdateDoc('borrowings', id, { status: s, checkInCondition: cond || 'Baik' })} />}
           {currentView === 'calendar' && <CalendarView events={events} onAdd={(d: any) => handleAddDoc('events', d)} />}
-          {currentView === 'discord_webhook' && <DiscordWebhookView />}
-          
           {currentView === 'songs' && <WorshipSongLibraryView songs={songs} onAdd={(d: any) => handleAddDoc('songs', d)} onDelete={(id: string) => handleDeleteDoc('songs', id)} />}
-          {currentView === 'rota' && <MinistryRotaView schedules={schedules} onAdd={(d: any) => handleAddDoc('schedules', d)} />}
-          {currentView === 'prayers' && <PrayerWallView prayers={prayers} onAdd={(d: any) => handleAddDoc('prayers', d)} onPray={(id: string, current: number) => handleUpdateDoc('prayers', id, { prayCount: current + 1 })} />}
-          {currentView === 'tasks' && <TaskBoardView tasks={tasks} onAdd={(d: any) => handleAddDoc('tasks', d)} onUpdateStatus={(id: string, s: string) => handleUpdateDoc('tasks', id, { status: s })} />}
+          {currentView === 'liturgy' && <LiturgyBuilderView liturgies={liturgies} onAdd={(d: any) => handleAddDoc('liturgies', d)} />}
+          {currentView === 'polls' && <PollsView polls={polls} onAdd={(d: any) => handleAddDoc('polls', d)} onVote={async (pollId: string, optIdx: number) => {
+            const poll = polls.find(p => p.id === pollId);
+            if (!poll) return;
+            if (poll.voters?.includes(user.uid)) { alert('Anda sudah memberikan suara pada polling ini!'); return; }
+            const newOpts = [...poll.options];
+            newOpts[optIdx].votes += 1;
+            await handleUpdateDoc('polls', pollId, { options: newOpts, voters: [...(poll.voters || []), user.uid] });
+          }} />}
+          {currentView === 'guests' && <GuestBookView guests={guests} onAdd={(d: any) => handleAddDoc('guests', d)} />}
         </div>
       </main>
     </div>
