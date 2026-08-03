@@ -195,55 +195,6 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
           </div>
         </div>
       </Card>
-
-      <div className="pt-2">
-        <h3 className="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest mb-3">Tautan Resmi & Media Sosial Gereja</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <a href={CHURCH_WEBSITE_URL} target="_blank" rel="noopener noreferrer" className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300">
-            <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold group-hover:scale-110 transition-transform flex-shrink-0">🌐</div>
-              <div className="truncate">
-                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors truncate">Website Resmi</h4>
-                <p className="text-[11px] text-slate-500 truncate">gkjslogohimo.web.id</p>
-              </div>
-            </div>
-            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors flex-shrink-0 ml-2" />
-          </a>
-
-          <a href={`mailto:${CHURCH_EMAIL}`} className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-emerald-500/50 hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300">
-            <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold group-hover:scale-110 transition-transform flex-shrink-0">✉️</div>
-              <div className="truncate">
-                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors truncate">Email Resmi</h4>
-                <p className="text-[11px] text-slate-500 truncate">{CHURCH_EMAIL}</p>
-              </div>
-            </div>
-            <Mail className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors flex-shrink-0 ml-2" />
-          </a>
-
-          <a href={CHURCH_IG_URL} target="_blank" rel="noopener noreferrer" className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-pink-500/50 hover:shadow-pink-500/10 hover:-translate-y-1 transition-all duration-300">
-            <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-500/10 border border-pink-100 dark:border-pink-500/20 flex items-center justify-center text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform flex-shrink-0">📸</div>
-              <div className="truncate">
-                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-pink-600 transition-colors truncate">Instagram KOMDA</h4>
-                <p className="text-[11px] text-slate-500 truncate">@komdagkjslogohimo</p>
-              </div>
-            </div>
-            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-pink-500 transition-colors flex-shrink-0 ml-2" />
-          </a>
-
-          <a href={CHURCH_YT_URL} target="_blank" rel="noopener noreferrer" className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-rose-500/50 hover:shadow-rose-500/10 hover:-translate-y-1 transition-all duration-300">
-            <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform flex-shrink-0">▶️</div>
-              <div className="truncate">
-                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors truncate">YouTube Resmi</h4>
-                <p className="text-[11px] text-slate-500 truncate">@GKJSLOGOHIMO</p>
-              </div>
-            </div>
-            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-rose-500 transition-colors flex-shrink-0 ml-2" />
-          </a>
-        </div>
-      </div>
     </div>
   );
 };
@@ -1159,6 +1110,26 @@ const PrayerWallView = ({ prayers, onAdd, onPray }: any) => {
     try { localStorage.setItem('komda_supported_prayers', JSON.stringify(updated)); } catch (e) {}
   };
 
+  const handleSendToDiscord = async (prayer: Prayer) => {
+    try {
+      const discordMsg = `🙏 **POKOK DOA JEMAAT - KOMDA HUB**\n\n> "${prayer.content}"\n\n❤️ **Dukungan Doa:** ${prayer.prayCount} orang\n📅 **Tanggal:** ${new Date(prayer.date).toLocaleDateString('id-ID')}`;
+      
+      const response = await fetch(PERMANENT_DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: discordMsg })
+      });
+
+      if (response.ok || response.status === 204) {
+        alert('Pokok doa berhasil dibagikan ke Discord!');
+      } else {
+        alert('Gagal mengirim ke Discord.');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan jaringan.');
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => { 
     e.preventDefault(); 
     onAdd({ author: 'Jemaat', content, date: new Date().toISOString(), prayCount: 0 }); 
@@ -1178,20 +1149,32 @@ const PrayerWallView = ({ prayers, onAdd, onPray }: any) => {
         {prayers.map((p: Prayer) => {
           const isSupported = supportedPrayers.includes(p.id);
           return (
-            <Card key={p.id} className="relative">
-              <p className="text-slate-800 dark:text-slate-200 italic mb-4">"{p.content}"</p>
-              <div className="flex justify-between items-center text-xs text-slate-500">
-                <span>{new Date(p.date).toLocaleDateString()}</span>
-                <button 
-                  onClick={() => handlePrayClick(p.id, p.prayCount)} 
-                  disabled={isSupported}
-                  className={`flex items-center gap-1.5 transition-colors px-3.5 py-1.5 rounded-full font-bold ${
-                    isSupported ? 'bg-rose-500/20 text-rose-500 cursor-not-allowed border border-rose-500/30' : 'bg-slate-100 dark:bg-slate-800 hover:text-rose-500 text-slate-700 dark:text-slate-300'
-                  }`}
-                >
-                  <Heart className={`w-4 h-4 ${isSupported ? 'fill-rose-500 text-rose-500' : ''}`} /> 
-                  {isSupported ? `Didukung (${p.prayCount})` : `Mendukung (${p.prayCount})`}
-                </button>
+            <Card key={p.id} className="relative space-y-4">
+              <p className="text-slate-800 dark:text-slate-200 italic text-base">"{p.content}"</p>
+              
+              <div className="flex flex-wrap justify-between items-center text-xs text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800 gap-2">
+                <span>📅 {new Date(p.date).toLocaleDateString()}</span>
+                
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleSendToDiscord(p)} 
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold bg-[#5865F2]/10 text-[#5865F2] hover:bg-[#5865F2]/20 transition-colors border border-[#5865F2]/20"
+                    title="Kirim pokok doa dan jumlah dukungan ke Discord"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" /> Kirim ke Discord
+                  </button>
+
+                  <button 
+                    onClick={() => handlePrayClick(p.id, p.prayCount)} 
+                    disabled={isSupported}
+                    className={`flex items-center gap-1.5 transition-colors px-3.5 py-1.5 rounded-full font-bold ${
+                      isSupported ? 'bg-rose-500/20 text-rose-500 cursor-not-allowed border border-rose-500/30' : 'bg-slate-100 dark:bg-slate-800 hover:text-rose-500 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <Heart className={`w-4 h-4 ${isSupported ? 'fill-rose-500 text-rose-500' : ''}`} /> 
+                    {isSupported ? `Didukung (${p.prayCount})` : `Mendukung (${p.prayCount})`}
+                  </button>
+                </div>
               </div>
             </Card>
           );
@@ -1273,8 +1256,6 @@ export default function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  
-  // Simulasi Role Aktif untuk Keamanan Super Admin
   const [currentUserRole, setCurrentUserRole] = useState<'Super Admin' | 'Anggota'>('Super Admin');
 
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
@@ -1317,10 +1298,7 @@ export default function App() {
     const getColRef = (colName: string) => collection(db, 'artifacts', appId, 'public', 'data', colName);
     
     const unsubs = [
-      onSnapshot(getColRef('members'), s => {
-        const loadedMembers = s.docs.map(d => ({ id: d.id, ...d.data() }) as Member);
-        setMembers(loadedMembers);
-      }),
+      onSnapshot(getColRef('members'), s => setMembers(s.docs.map(d => ({ id: d.id, ...d.data() }) as Member))),
       onSnapshot(getColRef('transactions'), s => setTransactions(s.docs.map(d => ({ id: d.id, ...d.data() }) as Transaction))),
       onSnapshot(getColRef('inventory'), s => setInventory(s.docs.map(d => ({ id: d.id, ...d.data() }) as InventoryItem))),
       onSnapshot(getColRef('borrowings'), s => setBorrowings(s.docs.map(d => ({ id: d.id, ...d.data() }) as BorrowingRequest))),
@@ -1428,7 +1406,6 @@ export default function App() {
             </button>
           </div>
           <div className="flex items-center gap-4">
-            {/* Tombol Simulasi Ganti Role Super Admin */}
             <button 
               onClick={() => setCurrentUserRole(prev => prev === 'Super Admin' ? 'Anggota' : 'Super Admin')}
               className={`text-xs px-3 py-1.5 rounded-lg font-bold border transition-all ${
@@ -1436,7 +1413,6 @@ export default function App() {
                   ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30' 
                   : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20'
               }`}
-              title="Klik untuk simulasi ganti role"
             >
               Role: {currentUserRole}
             </button>
