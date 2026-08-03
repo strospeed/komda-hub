@@ -1553,7 +1553,6 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
 
-  // Mencari data member berdasarkan email yang sedang login
   const currentMemberProfile = useMemo(() => {
     if (!user || !user.email) return null;
     return members.find((m: Member) => m.contact?.toLowerCase() === user.email?.toLowerCase());
@@ -1596,7 +1595,7 @@ export default function App() {
       onSnapshot(getColRef('songs'), s => setSongs(s.docs.map(d => ({ id: d.id, ...d.data() }) as Song))),
       onSnapshot(getColRef('schedules'), s => setSchedules(s.docs.map(d => ({ id: d.id, ...d.data() }) as Rota))),
       onSnapshot(getColRef('prayers'), s => setPrayers(s.docs.map(d => ({ id: d.id, ...d.data() }) as Prayer))),
-      onSnapshot(getColRef('tasks'), s => setTasks(s.docs.map(d => ({ id: d.id, ...d.data() }) as Task))))
+      onSnapshot(getColRef('tasks'), s => setTasks(s.docs.map(d => ({ id: d.id, ...d.data() }) as Task)))
     ];
 
     return () => unsubs.forEach(unsub => unsub());
