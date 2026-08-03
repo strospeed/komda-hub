@@ -20,7 +20,7 @@ import {
 import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
   LayoutDashboard, Plus, Trash2, Menu, X, ArrowRightLeft, Trophy, MessageSquare, Send,
-  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Printer, Image as ImageIcon, ChevronDown, ShieldAlert, LogOut, UserPlus, LogIn, PieChart, UserCheck, Save
+  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Printer, Image as ImageIcon, ChevronDown, ShieldAlert, LogOut, UserPlus, LogIn, PieChart, UserCheck, Save, Edit2
 } from 'lucide-react';
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
@@ -33,7 +33,7 @@ export const CHURCH_YT_URL = 'https://www.youtube.com/@GKJSLOGOHIMO';
 export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
 
 // Tuliskan email owner / admin utama di sini:
-const OWNER_EMAIL = 'mariodimasputra01@gmail.com'; // Ganti dengan email owner yang sebenarnya
+const OWNER_EMAIL = 'admin@gkjslogohimo.web.id'; // Ganti dengan email owner yang sebenarnya
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
 
@@ -436,11 +436,15 @@ const ProfileView = ({ user, members, onUpdateMember }: any) => {
   );
 };
 
-const MembersView = ({ members, onAdd, onDelete, onUpdateXP, currentUserRole }: any) => {
+const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, currentUserRole }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50, photoUrl: '' });
   const [isScanning, setIsScanning] = useState(false);
   const [activeQRMember, setActiveQRMember] = useState<Member | null>(null);
+  
+  // State untuk Modal Edit Role/Divisi Anggota oleh Super Admin
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [editForm, setEditForm] = useState({ role: 'Anggota', division: 'Youth' });
 
   const isSuperAdmin = currentUserRole === 'Super Admin';
 
@@ -498,6 +502,19 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, currentUserRole }: 
     setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50, photoUrl: '' });
   };
 
+  const handleOpenEdit = (member: Member) => {
+    if (!isSuperAdmin) return;
+    setEditingMember(member);
+    setEditForm({ role: member.role || 'Anggota', division: member.division || 'Youth' });
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    onUpdateMember(editingMember.id, editForm);
+    setEditingMember(null);
+  };
+
   const handleDownloadQR = (name: string, qrId: string) => {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/#member=${qrId}`)}`;
     const link = document.createElement('a');
@@ -534,6 +551,53 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, currentUserRole }: 
         <div className="bg-amber-500/10 border border-amber-500/30 p-3.5 rounded-xl flex items-center gap-3 text-amber-600 dark:text-amber-400 text-xs font-semibold">
           <ShieldAlert className="w-5 h-5 flex-shrink-0" />
           <span>Anda login sebagai <b>{currentUserRole}</b>. Penambahan anggota dan pengaturan role dikunci khusus untuk Super Admin.</span>
+        </div>
+      )}
+
+      {/* Modal Edit Role / Divisi oleh Super Admin */}
+      {editingMember && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl relative border border-slate-200 dark:border-slate-800">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Edit Role Anggota</h3>
+              <button onClick={() => setEditingMember(null)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
+            </div>
+            
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 mb-2">
+                <p className="text-xs text-slate-500 font-semibold">Nama Anggota:</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">{editingMember.name}</p>
+                <p className="text-[11px] text-slate-400 font-mono mt-0.5">{editingMember.contact}</p>
+              </div>
+
+              <Select 
+                label="Jabatan / Role" 
+                value={editForm.role} 
+                onChange={(e: any) => setEditForm({ ...editForm, role: e.target.value })} 
+                options={[
+                  { value: 'Anggota', label: 'Anggota' },
+                  { value: 'Pengurus', label: 'Pengurus' },
+                  { value: 'PJ Sound', label: 'PJ Sound System' },
+                  { value: 'PJ Media', label: 'PJ Multimedia' },
+                  { value: 'Bendahara', label: 'Bendahara' },
+                  { value: 'Ketua', label: 'Ketua / Pembina' },
+                  { value: 'Super Admin', label: 'Super Admin' }
+                ]} 
+              />
+
+              <Input 
+                label="Divisi / Departemen Pelayanan" 
+                value={editForm.division} 
+                onChange={(e: any) => setEditForm({ ...editForm, division: e.target.value })} 
+                placeholder="Cth: Youth / Multimedia / Puji-Pujian" 
+              />
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="ghost" type="button" onClick={() => setEditingMember(null)}>Batal</Button>
+                <Button type="submit">Simpan Perubahan Role</Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -668,9 +732,22 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, currentUserRole }: 
                     </td>
                     {isSuperAdmin && (
                       <td className="px-6 py-4 text-right">
-                        <button onClick={() => onDelete(member.id)} className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button 
+                            onClick={() => handleOpenEdit(member)} 
+                            title="Edit Role / Divisi"
+                            className="text-slate-400 hover:text-indigo-500 dark:text-slate-500 dark:hover:text-indigo-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => onDelete(member.id)} 
+                            title="Hapus Anggota"
+                            className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -1775,7 +1852,7 @@ export default function App() {
         <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full flex-1 relative z-10">
           {currentView === 'dashboard' && <DashboardView stats={dashboardStats} events={events} onNavigate={setCurrentView} />}
           {currentView === 'profile' && <ProfileView user={user} members={members} onUpdateMember={(id: string, data: any) => handleUpdateDoc('members', id, data)} />}
-          {currentView === 'members' && <MembersView members={members} onAdd={(d: any) => handleAddDoc('members', d)} onDelete={(id: string) => handleDeleteDoc('members', id)} onUpdateXP={(id: string, newXp: number) => handleUpdateDoc('members', id, { xp: newXp })} currentUserRole={currentUserRole} />}
+          {currentView === 'members' && <MembersView members={members} onAdd={(d: any) => handleAddDoc('members', d)} onDelete={(id: string) => handleDeleteDoc('members', id)} onUpdateXP={(id: string, newXp: number) => handleUpdateDoc('members', id, { xp: newXp })} onUpdateMember={(id: string, data: any) => handleUpdateDoc('members', id, data)} currentUserRole={currentUserRole} />}
           {currentView === 'finance' && <FinanceView transactions={transactions} stats={dashboardStats} onAdd={(d: any) => handleAddDoc('transactions', d)} />}
           
           {currentView === 'inventory_sound' && <InventoryView category="Sound System" items={inventory.filter(i => i.category === 'Sound System')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} selectedGearQR={selectedGearQR} setSelectedGearQR={setSelectedGearQR} />}
