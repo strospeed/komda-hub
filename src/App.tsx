@@ -32,8 +32,8 @@ export const CHURCH_TIKTOK_URL = 'https://www.tiktok.com/@komdagkjslogohimo';
 export const CHURCH_YT_URL = 'https://www.youtube.com/@GKJSLOGOHIMO';
 export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
 
-// Tuliskan email owner / admin utama di sini:
-const OWNER_EMAIL = 'mariodimasputra01@gmail.com'; // Ganti dengan email owner yang sebenarnya
+// Tuliskan email owner / admin utama pertama kali daftar:
+const OWNER_EMAIL = 'admin@gkjslogohimo.web.id'; 
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
 
@@ -442,7 +442,6 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
   const [isScanning, setIsScanning] = useState(false);
   const [activeQRMember, setActiveQRMember] = useState<Member | null>(null);
   
-  // State untuk Modal Edit Role/Divisi Anggota oleh Super Admin
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [editForm, setEditForm] = useState({ role: 'Anggota', division: 'Youth' });
 
@@ -554,7 +553,6 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP, onUpdateMember, cur
         </div>
       )}
 
-      {/* Modal Edit Role / Divisi oleh Super Admin */}
       {editingMember && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl relative border border-slate-200 dark:border-slate-800">
@@ -1603,10 +1601,32 @@ export default function App() {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const [members, setMembers] = useState<Member[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [borrowings, setBorrowings] = useState<BorrowingRequest[]>([]);
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [schedules, setSchedules] = useState<Rota[]>([]);
+  const [prayers, setPrayers] = useState<Prayer[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
+
+  // Perbaikan Fungsional: Menentukan role user berdasarkan data yang tersimpan di database anggota
   const currentUserRole = useMemo(() => {
     if (!user || !user.email) return 'Anggota';
-    return user.email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase() ? 'Super Admin' : 'Anggota';
-  }, [user]);
+    const emailLower = user.email.trim().toLowerCase();
+    
+    // Jika email utama owner atau role di database anggota bernilai Super Admin
+    if (emailLower === OWNER_EMAIL.toLowerCase()) return 'Super Admin';
+    
+    const matchedMember = members.find(m => m.contact?.toLowerCase() === emailLower);
+    if (matchedMember && matchedMember.role === 'Super Admin') {
+      return 'Super Admin';
+    }
+    
+    return matchedMember ? matchedMember.role : 'Anggota';
+  }, [user, members]);
 
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     utama: true,
@@ -1618,17 +1638,6 @@ export default function App() {
   const toggleMenu = (key: string) => {
     setExpandedMenus(prev => ({ ...prev, [key]: !prev[key] }))
   };
-
-  const [members, setMembers] = useState<Member[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [borrowings, setBorrowings] = useState<BorrowingRequest[]>([]);
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [schedules, setSchedules] = useState<Rota[]>([]);
-  const [prayers, setPrayers] = useState<Prayer[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
 
   const currentMemberProfile = useMemo(() => {
     if (!user || !user.email) return null;
