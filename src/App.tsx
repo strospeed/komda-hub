@@ -33,7 +33,7 @@ export const CHURCH_YT_URL = 'https://www.youtube.com/@GKJSLOGOHIMO';
 export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
 
 // Tuliskan email owner / admin utama pertama kali daftar:
-const OWNER_EMAIL = 'mariodimasputra01@gmail.com'; 
+const OWNER_EMAIL = 'admin@gkjslogohimo.web.id'; 
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
 
@@ -148,7 +148,7 @@ const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) =>
           name: name.trim() || email.split('@')[0],
           role: isOwner ? 'Super Admin' : 'Anggota',
           division: isOwner ? 'Pengurus Inti' : 'Youth',
-          contact: email,
+          contact: email.trim().toLowerCase(),
           joinDate: new Date().toISOString(),
           xp: 10,
           qrId: `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -247,9 +247,9 @@ const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) =>
 };
 
 const DashboardView = ({ stats, events, onNavigate }: any) => {
-  const totalFinancialFlow = stats.income + stats.expense;
-  const incomePercent = totalFinancialFlow > 0 ? Math.round((stats.income / totalFinancialFlow) * 100) : 50;
-  const expensePercent = totalFinancialFlow > 0 ? Math.round((stats.expense / totalFinancialFlow) * 100) : 50;
+  const totalFinancialFlow = (stats?.income || 0) + (stats?.expense || 0);
+  const incomePercent = totalFinancialFlow > 0 ? Math.round(((stats?.income || 0) / totalFinancialFlow) * 100) : 50;
+  const expensePercent = totalFinancialFlow > 0 ? Math.round(((stats?.expense || 0) / totalFinancialFlow) * 100) : 50;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -267,28 +267,28 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
               <Users className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
               <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Anggota</p>
             </div>
-            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{stats.members}</p>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{stats?.members || 0}</p>
           </Card>
           <Card onClick={() => onNavigate('finance')} className="border-t-4 border-t-emerald-500 dark:border-emerald-500/30">
              <div className="flex items-center gap-3 mb-2">
               <DollarSign className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
               <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Saldo Kas</p>
             </div>
-            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">Rp {stats.balance.toLocaleString('id-ID')}</p>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">Rp {(stats?.balance || 0).toLocaleString('id-ID')}</p>
           </Card>
           <Card onClick={() => onNavigate('inventory_sound')} className="border-t-4 border-t-amber-500 dark:border-amber-500/30">
             <div className="flex items-center gap-3 mb-2">
               <Speaker className="w-5 h-5 text-amber-500 dark:text-amber-400" />
               <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Inventaris Gear</p>
             </div>
-            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{stats.inventory}</p>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{stats?.inventory || 0}</p>
           </Card>
           <Card onClick={() => onNavigate('calendar')} className="border-t-4 border-t-cyan-500 dark:border-cyan-500/30">
             <div className="flex items-center gap-3 mb-2">
               <CalendarIcon className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
               <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Agenda Pelayanan</p>
             </div>
-            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{events.length}</p>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{events?.length || 0}</p>
           </Card>
       </div>
 
@@ -305,11 +305,11 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
           <div className="space-y-3">
             <div className="flex justify-between items-center text-xs">
               <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Pemasukan</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white">Rp {stats.income.toLocaleString('id-ID')} ({incomePercent}%)</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">Rp {(stats?.income || 0).toLocaleString('id-ID')} ({incomePercent}%)</span>
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div> Pengeluaran</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white">Rp {stats.expense.toLocaleString('id-ID')} ({expensePercent}%)</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">Rp {(stats?.expense || 0).toLocaleString('id-ID')} ({expensePercent}%)</span>
             </div>
           </div>
 
@@ -874,15 +874,15 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
         <div class="summary">
           <div class="summary-card">
             <h3>Total Pemasukan</h3>
-            <p style="color: #047857;">Rp ${stats.income.toLocaleString('id-ID')}</p>
+            <p style="color: #047857;">Rp {(stats?.income || 0).toLocaleString('id-ID')}</p>
           </div>
           <div class="summary-card">
             <h3>Total Pengeluaran</h3>
-            <p style="color: #b91c1c;">Rp ${stats.expense.toLocaleString('id-ID')}</p>
+            <p style="color: #b91c1c;">Rp {(stats?.expense || 0).toLocaleString('id-ID')}</p>
           </div>
           <div class="summary-card">
             <h3>Saldo Akhir Kas</h3>
-            <p>Rp ${stats.balance.toLocaleString('id-ID')}</p>
+            <p>Rp {(stats?.balance || 0).toLocaleString('id-ID')}</p>
           </div>
         </div>
 
@@ -896,7 +896,7 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
             </tr>
           </thead>
           <tbody>
-            ${transactions.sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t: Transaction) => `
+            {transactions.sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t: Transaction) => `
               <tr>
                 <td>${new Date(t.date).toLocaleDateString('id-ID')}</td>
                 <td><b>${t.description}</b></td>
@@ -943,15 +943,15 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border-emerald-500/30">
           <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Pemasukan</p>
-          <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">Rp {stats.income.toLocaleString('id-ID')}</p>
+          <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">Rp {(stats?.income || 0).toLocaleString('id-ID')}</p>
         </Card>
         <Card className="border-rose-500/30">
           <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Pengeluaran</p>
-          <p className="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">Rp {stats.expense.toLocaleString('id-ID')}</p>
+          <p className="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">Rp {(stats?.expense || 0).toLocaleString('id-ID')}</p>
         </Card>
         <Card className="border-indigo-500/30">
           <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Saldo Kas</p>
-          <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">Rp {stats.balance.toLocaleString('id-ID')}</p>
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">Rp {(stats?.balance || 0).toLocaleString('id-ID')}</p>
         </Card>
       </div>
       {isAdding && (
@@ -1612,12 +1612,12 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
 
-  // Perbaikan Fungsional: Menentukan role user berdasarkan data yang tersimpan di database anggota
+  // Perbaikan Keamanan Role: Selalu prioritaskan OWNER_EMAIL atau jika role di database tertulis Super Admin
   const currentUserRole = useMemo(() => {
     if (!user || !user.email) return 'Anggota';
     const emailLower = user.email.trim().toLowerCase();
     
-    // Jika email utama owner atau role di database anggota bernilai Super Admin
+    // Fallback mutlak ke OWNER_EMAIL agar akun utama tidak pernah kehilangan hak Super Admin
     if (emailLower === OWNER_EMAIL.toLowerCase()) return 'Super Admin';
     
     const matchedMember = members.find(m => m.contact?.toLowerCase() === emailLower);
