@@ -17,9 +17,8 @@ import {
 } from 'firebase/firestore';
 import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
-  FileText, LayoutDashboard, Plus, Trash2, CheckCircle, XCircle,
-  Menu, X, ArrowRightLeft, Trophy, MessageSquare, Sparkles, Send,
-  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Info, ChevronDown, ExternalLink, Mail, PieChart, Printer, Image as ImageIcon
+  LayoutDashboard, Plus, Trash2, Menu, X, ArrowRightLeft, Trophy, MessageSquare, Send,
+  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, ExternalLink, Mail, PieChart, Printer, Image as ImageIcon, ChevronDown, ShieldAlert
 } from 'lucide-react';
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
@@ -53,7 +52,7 @@ const appId = 'komda-hub-main';
 export type View = 'dashboard' | 'members' | 'finance' | 'inventory_sound' | 'inventory_media' | 'inventory_property' | 'borrowing' | 'calendar' | 'discord_webhook' | 'songs' | 'rota' | 'prayers' | 'tasks';
 
 interface Member { id: string; name: string; role: string; division: string; contact: string; joinDate: string; xp: number; qrId?: string; photoUrl?: string; }
-export interface Transaction { id: string; type: 'income' | 'expense'; amount: number; description: string; date: string; category: string; }
+export interface Transaction { id: string; type: 'income' | 'expense'; amount: number; description: string; date: string; }
 type InventoryCategory = 'Sound System' | 'Multimedia' | 'Properti';
 interface InventoryItem { id: string; name: string; category: InventoryCategory; condition: 'Good' | 'Needs Repair' | 'Broken'; quantity: number; location: string; qrCodeId?: string; }
 export interface BorrowingRequest { id: string; itemId: string; itemName: string; borrowerName: string; startDate: string; endDate: string; status: 'Pending' | 'Approved' | 'Rejected' | 'Returned'; purpose?: string; }
@@ -116,6 +115,7 @@ export const Badge = ({ children, color = 'indigo' }: { children: React.ReactNod
     rose: 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border-rose-200 dark:border-rose-500/20',
     cyan: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/20',
     slate: 'bg-slate-100 text-slate-700 dark:bg-slate-500/10 dark:text-slate-400 border-slate-200 dark:border-slate-500/20',
+    purple: 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border-purple-200 dark:border-purple-500/20',
   };
   return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[color] || styles.indigo}`}>{children}</span>;
 };
@@ -166,7 +166,6 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
           </Card>
       </div>
 
-      {/* Financial Diagram / Overview Card */}
       <Card onClick={() => onNavigate('finance')} className="border-indigo-500/30">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -193,29 +192,16 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
               <div className="bg-emerald-500 h-full rounded-l-full transition-all duration-500" style={{ width: `${incomePercent}%` }} title={`Pemasukan: ${incomePercent}%`}></div>
               <div className="bg-rose-500 h-full rounded-r-full transition-all duration-500" style={{ width: `${expensePercent}%` }} title={`Pengeluaran: ${expensePercent}%`}></div>
             </div>
-            <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 mt-2 font-mono">
-              <span>0%</span>
-              <span>Proporsi Arus Kas Masuk vs Keluar</span>
-              <span>100%</span>
-            </div>
           </div>
         </div>
       </Card>
 
-      {/* Quick Links & Social Media Section */}
       <div className="pt-2">
         <h3 className="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest mb-3">Tautan Resmi & Media Sosial Gereja</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <a 
-            href={CHURCH_WEBSITE_URL} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300"
-          >
+          <a href={CHURCH_WEBSITE_URL} target="_blank" rel="noopener noreferrer" className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold group-hover:scale-110 transition-transform flex-shrink-0">
-                🌐
-              </div>
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold group-hover:scale-110 transition-transform flex-shrink-0">🌐</div>
               <div className="truncate">
                 <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors truncate">Website Resmi</h4>
                 <p className="text-[11px] text-slate-500 truncate">gkjslogohimo.web.id</p>
@@ -224,14 +210,9 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors flex-shrink-0 ml-2" />
           </a>
 
-          <a 
-            href={`mailto:${CHURCH_EMAIL}`}
-            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-emerald-500/50 hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300"
-          >
+          <a href={`mailto:${CHURCH_EMAIL}`} className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-emerald-500/50 hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold group-hover:scale-110 transition-transform flex-shrink-0">
-                ✉️
-              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold group-hover:scale-110 transition-transform flex-shrink-0">✉️</div>
               <div className="truncate">
                 <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors truncate">Email Resmi</h4>
                 <p className="text-[11px] text-slate-500 truncate">{CHURCH_EMAIL}</p>
@@ -240,16 +221,9 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             <Mail className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors flex-shrink-0 ml-2" />
           </a>
 
-          <a 
-            href={CHURCH_IG_URL} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-pink-500/50 hover:shadow-pink-500/10 hover:-translate-y-1 transition-all duration-300"
-          >
+          <a href={CHURCH_IG_URL} target="_blank" rel="noopener noreferrer" className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-pink-500/50 hover:shadow-pink-500/10 hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-500/10 border border-pink-100 dark:border-pink-500/20 flex items-center justify-center text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform flex-shrink-0">
-                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-              </div>
+              <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-500/10 border border-pink-100 dark:border-pink-500/20 flex items-center justify-center text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform flex-shrink-0">📸</div>
               <div className="truncate">
                 <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-pink-600 transition-colors truncate">Instagram KOMDA</h4>
                 <p className="text-[11px] text-slate-500 truncate">@komdagkjslogohimo</p>
@@ -258,16 +232,9 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-pink-500 transition-colors flex-shrink-0 ml-2" />
           </a>
 
-          <a 
-            href={CHURCH_YT_URL} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-rose-500/50 hover:shadow-rose-500/10 hover:-translate-y-1 transition-all duration-300"
-          >
+          <a href={CHURCH_YT_URL} target="_blank" rel="noopener noreferrer" className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-rose-500/50 hover:shadow-rose-500/10 hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform flex-shrink-0">
-                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-              </div>
+              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform flex-shrink-0">▶️</div>
               <div className="truncate">
                 <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors truncate">YouTube Resmi</h4>
                 <p className="text-[11px] text-slate-500 truncate">@GKJSLOGOHIMO</p>
@@ -275,72 +242,19 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
             </div>
             <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-rose-500 transition-colors flex-shrink-0 ml-2" />
           </a>
-
-          <a 
-            href={CHURCH_FB_URL} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-blue-500/50 hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-300"
-          >
-            <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
-                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M9 8H6v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.37 14.5 5 15.5 5H18V0h-3.808C10.59 0 9 1.581 9 4.615V8z"/></svg>
-              </div>
-              <div className="truncate">
-                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors truncate">Facebook Gereja</h4>
-                <p className="text-[11px] text-slate-500 truncate">gkj.slogohimo</p>
-              </div>
-            </div>
-            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors flex-shrink-0 ml-2" />
-          </a>
-
-          <a 
-            href={CHURCH_TIKTOK_URL} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-slate-400/50 hover:shadow-slate-500/10 hover:-translate-y-1 transition-all duration-300"
-          >
-            <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-900 dark:text-white group-hover:scale-110 transition-transform flex-shrink-0">
-                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002-.001a2.895 2.895 0 0 1 3.193-4.432v-3.461c-3.755.076-6.84 3.142-6.84 6.899 0 3.82 3.11 6.93 6.93 6.93 3.82 0 6.93-3.11 6.93-6.93V9.508a8.217 8.217 0 0 0 4.815 1.543v-3.45a4.78 4.78 0 0 1-1.128-.915z"/></svg>
-              </div>
-              <div className="truncate">
-                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors truncate">TikTok KOMDA</h4>
-                <p className="text-[11px] text-slate-500 truncate">@komdagkjslogohimo</p>
-              </div>
-            </div>
-            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors flex-shrink-0 ml-2" />
-          </a>
-
-          <a 
-            href={DISCORD_INVITE_URL} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between hover:border-[#5865F2]/50 hover:shadow-[#5865F2]/10 hover:-translate-y-1 transition-all duration-300 sm:col-span-2"
-          >
-            <div className="flex items-center gap-3 truncate">
-              <div className="w-10 h-10 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center text-[#5865F2] font-bold group-hover:scale-110 transition-transform flex-shrink-0">
-                💬
-              </div>
-              <div className="truncate">
-                <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-[#5865F2] transition-colors truncate">Komunitas Discord KOMDA</h4>
-                <p className="text-[11px] text-slate-500 truncate">discord.gg/GwXdWBTapD</p>
-              </div>
-            </div>
-            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-[#5865F2] transition-colors flex-shrink-0 ml-2" />
-          </a>
         </div>
       </div>
     </div>
   );
 };
 
-const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
+const MembersView = ({ members, onAdd, onDelete, onUpdateXP, currentUserRole }: any) => {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50, photoUrl: '' });
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<string | null>(null);
   const [activeQRMember, setActiveQRMember] = useState<Member | null>(null);
+
+  const isSuperAdmin = currentUserRole === 'Super Admin';
 
   useEffect(() => {
     if (!isScanning) return;
@@ -355,7 +269,6 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
       );
       scanner.render(
         (decodedText: string) => {
-          setScanResult(decodedText);
           scanner.clear();
           setIsScanning(false);
           const foundMember = members.find((m: Member) => m.qrId === decodedText || decodedText.includes(m.qrId || ''));
@@ -363,13 +276,13 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
             onUpdateXP(foundMember.id, (foundMember.xp || 0) + 10);
             alert(`Berhasil! Kehadiran ${foundMember.name} dicatat (+10 XP).`);
           } else {
-            alert(`QR Code terdeteksi: "${decodedText}", tetapi anggota tidak terdaftar di database.`);
+            alert(`QR Code terdeteksi, tetapi anggota tidak terdaftar.`);
           }
         },
-        (error: any) => {}
+        () => {}
       );
       return () => {
-        try { scanner.clear(); } catch (e) { console.error(e); }
+        try { scanner.clear(); } catch (e) {}
       };
     }
   }, [isScanning, members, onUpdateXP]);
@@ -387,6 +300,10 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isSuperAdmin) {
+      alert("Akses ditolak! Hanya Super Admin yang dapat menambah anggota / mengatur hak akses.");
+      return;
+    }
     const qrId = `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`;
     onAdd({ ...formData, joinDate: new Date().toISOString(), xp: Number(formData.xp) || 0, qrId });
     setIsAdding(false);
@@ -419,9 +336,18 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
           <Button variant="secondary" onClick={() => setIsScanning(true)}>
             <ScanLine className="w-4 h-4" /> Scan Presensi
           </Button>
-          <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Anggota</Button>
+          {isSuperAdmin && (
+            <Button onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Tambah Anggota</Button>
+          )}
         </div>
       </div>
+
+      {!isSuperAdmin && (
+        <div className="bg-amber-500/10 border border-amber-500/30 p-3.5 rounded-xl flex items-center gap-3 text-amber-600 dark:text-amber-400 text-xs font-semibold">
+          <ShieldAlert className="w-5 h-5 flex-shrink-0" />
+          <span>Anda login sebagai <b>{currentUserRole}</b>. Penambahan anggota dan pengaturan role dikunci khusus untuk Super Admin.</span>
+        </div>
+      )}
 
       {isScanning && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-in fade-in">
@@ -431,7 +357,6 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
               <button onClick={() => setIsScanning(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-6 h-6"/></button>
             </div>
             <div id="reader" className="overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-950"></div>
-            <p className="text-xs text-slate-500 text-center mt-4">Sistem akan otomatis mencatat kehadiran saat QR terbaca.</p>
           </div>
         </div>
       )}
@@ -443,7 +368,6 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
             <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-1">KOMDA ID</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-4">{activeQRMember.division} Division</p>
             
-            {/* Foto Profil di Kartu ID */}
             <div className="mb-4 flex justify-center">
               <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-indigo-500 shadow-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                 {activeQRMember.photoUrl ? (
@@ -463,15 +387,17 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
               <Button onClick={() => handleDownloadQR(activeQRMember.name, activeQRMember.qrId || 'MEMBER')} variant="secondary" className="w-full">
                 <Download className="w-4 h-4" /> Download QR Code
               </Button>
-              <Button onClick={() => { onUpdateXP(activeQRMember.id, (activeQRMember.xp || 0) + 10); setActiveQRMember(null); }} variant="emerald" className="w-full">
-                <CheckCircle className="w-4 h-4" /> Hadir (+10 XP)
-              </Button>
+              {isSuperAdmin && (
+                <Button onClick={() => { onUpdateXP(activeQRMember.id, (activeQRMember.xp || 0) + 10); setActiveQRMember(null); }} variant="emerald" className="w-full">
+                  <QrCode className="w-4 h-4" /> Hadir (+10 XP)
+                </Button>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {isAdding && (
+      {isAdding && isSuperAdmin && (
         <Card className="border-indigo-500/50">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -481,23 +407,13 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
               <Input label="Kontak (WA/Discord)" value={formData.contact} onChange={(e:any) => setFormData({...formData, contact: e.target.value})} placeholder="@username atau 0812..." />
               <Input label="XP Poin" type="number" min="0" value={formData.xp} onChange={(e:any) => setFormData({...formData, xp: e.target.value})} />
               
-              {/* Opsi Upload Foto Profil */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Foto Profil (File / Galeri / Kamera HP)</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Foto Profil</label>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-                    {formData.photoUrl ? (
-                      <img src={formData.photoUrl} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <ImageIcon className="w-5 h-5 text-slate-400" />
-                    )}
+                    {formData.photoUrl ? <img src={formData.photoUrl} alt="Preview" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-slate-400" />}
                   </div>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleImageUpload}
-                    className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-500/10 dark:file:text-indigo-400 hover:file:bg-indigo-100 transition-all cursor-pointer" 
-                  />
+                  <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-500/10 dark:file:text-indigo-400 hover:file:bg-indigo-100 transition-all cursor-pointer" />
                 </div>
               </div>
             </div>
@@ -519,7 +435,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
                 <th className="px-6 py-4">Nama & ID</th>
                 <th className="px-6 py-4">Jabatan & Divisi</th>
                 <th className="px-6 py-4 text-center">Keaktifan (XP)</th>
-                <th className="px-6 py-4 text-right">Aksi</th>
+                {isSuperAdmin && <th className="px-6 py-4 text-right">Aksi Super Admin</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -537,11 +453,7 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
                     <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400 uppercase flex-shrink-0">
-                          {member.photoUrl ? (
-                            <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" />
-                          ) : (
-                            member.name.substring(0, 2)
-                          )}
+                          {member.photoUrl ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" /> : member.name.substring(0, 2)}
                         </div>
                         <div>
                           <div>{member.name}</div>
@@ -566,11 +478,13 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => onDelete(member.id)} className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
+                    {isSuperAdmin && (
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => onDelete(member.id)} className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -584,13 +498,78 @@ const MembersView = ({ members, onAdd, onDelete, onUpdateXP }: any) => {
 
 const FinanceView = ({ transactions, onAdd, stats }: any) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState({ type: 'income', amount: '', description: '', category: 'Persembahan Kasih', date: new Date().toISOString().split('T')[0] });
+  const [formData, setFormData] = useState({ type: 'income', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd({ ...formData, amount: parseFloat(formData.amount) || 0 });
+    onAdd({ ...formData, amount: parseFloat(formData.amount) || 0, category: 'Kas Umum' });
     setIsAdding(false);
-    setFormData({ type: 'income', amount: '', description: '', category: 'Persembahan Kasih', date: new Date().toISOString().split('T')[0] });
+    setFormData({ type: 'income', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
+  };
+
+  const handleExportExcel = () => {
+    let excelHTML = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="UTF-8"></head>
+      <body>
+        <table border="1">
+          <tr><td colspan="5" style="font-size: 16px; font-weight: bold; text-align: center;">BUKU KAS - KOMDA HUB</td></tr>
+          <tr><td colspan="5" style="font-size: 11px; text-align: center;">Dicetak pada: ${new Date().toLocaleDateString('id-ID', { dateStyle: 'full' })}</td></tr>
+          <tr><td colspan="5"></td></tr>
+          <tr style="background-color: #4338ca; color: white; font-weight: bold; text-align: center;">
+            <th style="padding: 6px; border: 1px solid #000;">Tanggal</th>
+            <th style="padding: 6px; border: 1px solid #000;">Keterangan</th>
+            <th style="padding: 6px; border: 1px solid #000;">Pemasukan (Rp)</th>
+            <th style="padding: 6px; border: 1px solid #000;">Pengeluaran (Rp)</th>
+            <th style="padding: 6px; border: 1px solid #000;">Saldo Akhir (Rp)</th>
+          </tr>
+    `;
+
+    const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    let runningBalance = 0;
+
+    sortedTransactions.forEach((t: any) => {
+      const amount = Number(t.amount) || 0;
+      if (t.type === 'income') {
+        runningBalance += amount;
+      } else {
+        runningBalance -= amount;
+      }
+
+      excelHTML += `
+        <tr>
+          <td style="border: 1px solid #000; text-align: center; mso-number-format:'\@';">${t.date}</td>
+          <td style="border: 1px solid #000;">${t.description}</td>
+          <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${t.type === 'income' ? amount : '-'}</td>
+          <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${t.type === 'expense' ? amount : '-'}</td>
+          <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${runningBalance}</td>
+        </tr>
+      `;
+    });
+
+    const totalIncome = sortedTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const totalExpense = sortedTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+    excelHTML += `
+          <tr style="background-color: #1e293b; color: white; font-weight: bold;">
+            <td colspan="2" style="border: 1px solid #000; text-align: right;">TOTAL KESELURUHAN:</td>
+            <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${totalIncome}</td>
+            <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${totalExpense}</td>
+            <td style="border: 1px solid #000; text-align: right; mso-number-format:'#,##0';">${runningBalance}</td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([excelHTML], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Buku_Kas_KOMDA_${new Date().toISOString().split('T')[0]}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const handleExportPDF = () => {
@@ -693,7 +672,8 @@ const FinanceView = ({ transactions, onAdd, stats }: any) => {
           </h2>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={handleExportPDF}><Printer className="w-4 h-4" /> Export PDF / Cetak</Button>
+          <Button variant="secondary" onClick={handleExportExcel}><Download className="w-4 h-4" /> Export Excel</Button>
+          <Button variant="secondary" onClick={handleExportPDF}><Printer className="w-4 h-4" /> Export PDF</Button>
           <Button variant="emerald" onClick={() => setIsAdding(!isAdding)}><Plus className="w-4 h-4" /> Catat Transaksi</Button>
         </div>
       </div>
@@ -903,10 +883,8 @@ const CalendarView = ({ events, onAdd }: any) => {
     if (!eventDateStr) return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const eventDate = new Date(eventDateStr);
     eventDate.setHours(0, 0, 0, 0);
-
     return eventDate < today;
   };
 
@@ -977,10 +955,10 @@ const DiscordWebhookView = () => {
         setStatus({ type: 'success', text: 'Pesan berhasil dikirim ke Discord!' });
         setMessage('');
       } else {
-        setStatus({ type: 'error', text: 'Gagal mengirim pesan ke Discord. Periksa kembali webhook.' });
+        setStatus({ type: 'error', text: 'Gagal mengirim pesan ke Discord.' });
       }
     } catch (err) {
-      setStatus({ type: 'error', text: 'Terjadi kesalahan jaringan saat mengirim pesan.' });
+      setStatus({ type: 'error', text: 'Terjadi kesalahan jaringan.' });
     } finally {
       setIsLoading(false);
     }
@@ -999,14 +977,7 @@ const DiscordWebhookView = () => {
             <span className="font-mono text-indigo-600 dark:text-indigo-400 truncate max-w-[280px] sm:max-w-md">Kanal Resmi KOMDA</span>
           </div>
 
-          <Textarea 
-            label="Pesan Broadcast" 
-            rows={5} 
-            value={message} 
-            onChange={(e:any) => setMessage(e.target.value)} 
-            placeholder="Tulis pengumuman atau pesan untuk dikirim ke Discord..." 
-            required 
-          />
+          <Textarea label="Pesan Broadcast" rows={5} value={message} onChange={(e:any) => setMessage(e.target.value)} placeholder="Tulis pengumuman..." required />
 
           {status.type && (
             <div className={`p-3 rounded-lg text-xs font-semibold ${status.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
@@ -1078,9 +1049,9 @@ const WorshipSongLibraryView = ({ songs, onAdd, onDelete }: any) => {
 
               <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                 <span className="text-xs font-bold px-2 text-slate-500">Chord:</span>
-                <button onClick={() => setTransposeStep(prev => prev - 1)} className="px-2.5 py-1 text-xs font-bold bg-white dark:bg-slate-700 rounded-lg shadow hover:bg-indigo-600 hover:text-white transition-colors">-</button>
+                <button onClick={() => setTransposeStep(prev => prev - 1)} className="px-2.5 py-1 text-xs font-bold bg-white dark:bg-slate-700 rounded-lg shadow">-</button>
                 <button onClick={() => setTransposeStep(0)} className="px-2.5 py-1 text-xs font-bold text-slate-600 dark:text-slate-300">Reset</button>
-                <button onClick={() => setTransposeStep(prev => prev + 1)} className="px-2.5 py-1 text-xs font-bold bg-white dark:bg-slate-700 rounded-lg shadow hover:bg-indigo-600 hover:text-white transition-colors">+</button>
+                <button onClick={() => setTransposeStep(prev => prev + 1)} className="px-2.5 py-1 text-xs font-bold bg-white dark:bg-slate-700 rounded-lg shadow">+</button>
               </div>
             </div>
 
@@ -1088,12 +1059,12 @@ const WorshipSongLibraryView = ({ songs, onAdd, onDelete }: any) => {
             
             <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
               <pre className="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                {getTransformedLyrics(selectedSong.lyrics || 'Tidak ada lirik atau chord yang dicatat.')}
+                {getTransformedLyrics(selectedSong.lyrics || 'Tidak ada lirik.')}
               </pre>
             </div>
 
             <div className="mt-6 flex justify-between items-center">
-              <Button variant="danger" onClick={() => { if (confirm('Hapus lagu ini dari database?')) { onDelete(selectedSong.id); setSelectedSong(null); setTransposeStep(0); } }}>
+              <Button variant="danger" onClick={() => { if (confirm('Hapus lagu?')) { onDelete(selectedSong.id); setSelectedSong(null); } }}>
                 <Trash2 className="w-4 h-4" /> Hapus Lagu
               </Button>
               <Button onClick={() => { setSelectedSong(null); setTransposeStep(0); }} variant="secondary">Tutup</Button>
@@ -1107,9 +1078,9 @@ const WorshipSongLibraryView = ({ songs, onAdd, onDelete }: any) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex gap-4">
               <Input label="Judul Lagu" required value={formData.title} onChange={(e:any) => setFormData({...formData, title: e.target.value})} className="flex-1" />
-              <Input label="Nada Dasar (Key)" required value={formData.key} onChange={(e:any) => setFormData({...formData, key: e.target.value})} className="w-24" />
+              <Input label="Nada Dasar" required value={formData.key} onChange={(e:any) => setFormData({...formData, key: e.target.value})} className="w-24" />
             </div>
-            <Textarea label="Lirik & Chord (Gunakan kurung siku untuk chord, cth: [C] [G])" rows={6} value={formData.lyrics} onChange={(e:any) => setFormData({...formData, lyrics: e.target.value})} placeholder="[C] Betapa [G] besar [Am] kasihMu..." />
+            <Textarea label="Lirik & Chord (Cth: [C] [G])" rows={6} value={formData.lyrics} onChange={(e:any) => setFormData({...formData, lyrics: e.target.value})} />
             <div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan</Button></div>
           </form>
         </Card>
@@ -1121,13 +1092,8 @@ const WorshipSongLibraryView = ({ songs, onAdd, onDelete }: any) => {
             <div className="absolute top-0 right-0 bg-rose-500 text-white font-bold text-xs px-3 py-1 rounded-bl-xl shadow-md">Key: {s.key}</div>
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mt-2 pr-8">{s.title}</h3>
             <p className="text-xs text-slate-500 mt-3 font-mono whitespace-pre-wrap line-clamp-4">{s.lyrics || 'Lirik belum tersedia.'}</p>
-            <div className="mt-4 flex justify-between items-center">
-              <span className="text-xs font-semibold text-rose-500 flex items-center gap-1">Klik untuk buka lirik & transposer →</span>
-              <button onClick={(e) => { e.stopPropagation(); if (confirm('Yakin ingin menghapus lagu ini?')) onDelete(s.id); }} className="text-slate-400 hover:text-rose-500 p-1 rounded transition-colors"><Trash2 className="w-4 h-4"/></button>
-            </div>
           </Card>
         ))}
-        {songs.length === 0 && <p className="col-span-full text-slate-500 italic">Belum ada lagu. Tambahkan repertoar pujian pertama!</p>}
       </div>
     </div>
   );
@@ -1149,7 +1115,7 @@ const MinistryRotaView = ({ schedules, onAdd }: any) => {
             <Input label="Tanggal" type="date" required value={formData.date} onChange={(e:any) => setFormData({...formData, date: e.target.value})} />
             <Input label="Acara" required value={formData.event} onChange={(e:any) => setFormData({...formData, event: e.target.value})} />
             <Input label="Worship Leader (WL)" value={formData.wl} onChange={(e:any) => setFormData({...formData, wl: e.target.value})} />
-            <Input label="Pemusik (Keyboard, Gitar, dll)" value={formData.musicians} onChange={(e:any) => setFormData({...formData, musicians: e.target.value})} />
+            <Input label="Pemusik" value={formData.musicians} onChange={(e:any) => setFormData({...formData, musicians: e.target.value})} />
             <Input label="Multimedia & Sound" className="md:col-span-2" value={formData.multimedia} onChange={(e:any) => setFormData({...formData, multimedia: e.target.value})} />
             <div className="md:col-span-2 flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan</Button></div>
           </form>
@@ -1163,7 +1129,7 @@ const MinistryRotaView = ({ schedules, onAdd }: any) => {
               <p className="font-bold mt-2 text-slate-900 dark:text-white">{new Date(s.date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
             </div>
             <div className="flex-1 grid grid-cols-2 gap-4 text-sm text-slate-700 dark:text-slate-300">
-              <div><span className="font-semibold text-slate-500 block mb-1">🎤 Worship Leader</span>{s.wl || '-'}</div>
+              <div><span className="font-semibold text-slate-500 block mb-1">🎤 WL</span>{s.wl || '-'}</div>
               <div><span className="font-semibold text-slate-500 block mb-1">🎹 Pemusik</span>{s.musicians || '-'}</div>
               <div className="col-span-2"><span className="font-semibold text-slate-500 block mb-1">💻 Media & Sound</span>{s.multimedia || '-'}</div>
             </div>
@@ -1176,7 +1142,6 @@ const MinistryRotaView = ({ schedules, onAdd }: any) => {
 
 const PrayerWallView = ({ prayers, onAdd, onPray }: any) => {
   const [content, setContent] = useState('');
-  
   const [supportedPrayers, setSupportedPrayers] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('komda_supported_prayers');
@@ -1188,19 +1153,15 @@ const PrayerWallView = ({ prayers, onAdd, onPray }: any) => {
 
   const handlePrayClick = (prayerId: string, currentCount: number) => {
     if (supportedPrayers.includes(prayerId)) return;
-    
     onPray(prayerId, currentCount);
-    
     const updated = [...supportedPrayers, prayerId];
     setSupportedPrayers(updated);
-    try {
-      localStorage.setItem('komda_supported_prayers', JSON.stringify(updated));
-    } catch (e) {}
+    try { localStorage.setItem('komda_supported_prayers', JSON.stringify(updated)); } catch (e) {}
   };
 
   const handleSubmit = (e: React.FormEvent) => { 
     e.preventDefault(); 
-    onAdd({ author: 'Anonim / Jemaat', content, date: new Date().toISOString(), prayCount: 0 }); 
+    onAdd({ author: 'Jemaat', content, date: new Date().toISOString(), prayCount: 0 }); 
     setContent(''); 
   };
 
@@ -1225,9 +1186,7 @@ const PrayerWallView = ({ prayers, onAdd, onPray }: any) => {
                   onClick={() => handlePrayClick(p.id, p.prayCount)} 
                   disabled={isSupported}
                   className={`flex items-center gap-1.5 transition-colors px-3.5 py-1.5 rounded-full font-bold ${
-                    isSupported 
-                      ? 'bg-rose-500/20 text-rose-500 cursor-not-allowed border border-rose-500/30' 
-                      : 'bg-slate-100 dark:bg-slate-800 hover:text-rose-500 text-slate-700 dark:text-slate-300'
+                    isSupported ? 'bg-rose-500/20 text-rose-500 cursor-not-allowed border border-rose-500/30' : 'bg-slate-100 dark:bg-slate-800 hover:text-rose-500 text-slate-700 dark:text-slate-300'
                   }`}
                 >
                   <Heart className={`w-4 h-4 ${isSupported ? 'fill-rose-500 text-rose-500' : ''}`} /> 
@@ -1252,15 +1211,15 @@ const TaskBoardView = ({ tasks, onAdd, onUpdateStatus }: any) => {
       <h3 className={`font-bold text-sm uppercase tracking-widest mb-4 flex items-center gap-2 ${colorClass}`}><div className={`w-2 h-2 rounded-full ${colorClass.split(' ')[0].replace('text', 'bg')}`}></div> {status}</h3>
       <div className="space-y-3">
         {tasks.filter((t: Task) => t.status === status).map((t: Task) => (
-          <Card key={t.id} className="p-3 shadow-sm hover:shadow-md cursor-grab">
+          <Card key={t.id} className="p-3 shadow-sm">
             <Badge color="slate">{t.event}</Badge>
             <p className="font-bold text-sm mt-2 text-slate-900 dark:text-white">{t.title}</p>
             <div className="flex justify-between items-center mt-3 border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="text-xs text-slate-500">{t.assignee}</span>
               <select className="text-xs bg-transparent text-indigo-500 font-bold focus:outline-none" value={t.status} onChange={(e) => onUpdateStatus(t.id, e.target.value)}>
-                <option value="To Do" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">To Do</option>
-                <option value="In Progress" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">In Progress</option>
-                <option value="Done" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Done</option>
+                <option value="To Do" className="bg-white dark:bg-slate-900">To Do</option>
+                <option value="In Progress" className="bg-white dark:bg-slate-900">In Progress</option>
+                <option value="Done" className="bg-white dark:bg-slate-900">Done</option>
               </select>
             </div>
           </Card>
@@ -1279,7 +1238,7 @@ const TaskBoardView = ({ tasks, onAdd, onUpdateStatus }: any) => {
         <Card className="border-emerald-500/50">
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Judul Tugas" required value={formData.title} onChange={(e:any) => setFormData({...formData, title: e.target.value})} />
-            <Input label="Penanggung Jawab (PIC)" value={formData.assignee} onChange={(e:any) => setFormData({...formData, assignee: e.target.value})} />
+            <Input label="PIC" value={formData.assignee} onChange={(e:any) => setFormData({...formData, assignee: e.target.value})} />
             <Input label="Untuk Acara" value={formData.event} onChange={(e:any) => setFormData({...formData, event: e.target.value})} className="md:col-span-2" />
             <div className="md:col-span-2 flex justify-end gap-2"><Button variant="ghost" onClick={() => setIsAdding(false)}>Batal</Button><Button type="submit">Simpan</Button></div>
           </form>
@@ -1314,6 +1273,9 @@ export default function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  
+  // Simulasi Role Aktif untuk Keamanan Super Admin
+  const [currentUserRole, setCurrentUserRole] = useState<'Super Admin' | 'Anggota'>('Super Admin');
 
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     utama: true,
@@ -1335,21 +1297,16 @@ export default function App() {
   const [schedules, setSchedules] = useState<Rota[]>([]);
   const [prayers, setPrayers] = useState<Prayer[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-
-  // State for Deep Link QR Inspection popup
   const [selectedGearQR, setSelectedGearQR] = useState<InventoryItem | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
-    if (isDarkMode) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
+    if (isDarkMode) root.classList.add('dark');
+    else root.classList.remove('dark');
   }, [isDarkMode]);
 
   useEffect(() => {
-    const initAuth = async () => { try { await signInAnonymously(auth); } catch (error) { console.error(error); } };
+    const initAuth = async () => { try { await signInAnonymously(auth); } catch (error) {} };
     initAuth();
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => { setUser(currentUser); setLoading(false); });
     return () => unsubscribe();
@@ -1363,35 +1320,9 @@ export default function App() {
       onSnapshot(getColRef('members'), s => {
         const loadedMembers = s.docs.map(d => ({ id: d.id, ...d.data() }) as Member);
         setMembers(loadedMembers);
-        
-        // Check hash for deep link member
-        const hash = window.location.hash;
-        if (hash.includes('#member=')) {
-          const qrId = hash.split('#member=')[1];
-          const matched = loadedMembers.find(m => m.qrId === qrId);
-          if (matched) {
-            setCurrentView('members');
-          }
-        }
       }),
       onSnapshot(getColRef('transactions'), s => setTransactions(s.docs.map(d => ({ id: d.id, ...d.data() }) as Transaction))),
-      onSnapshot(getColRef('inventory'), s => {
-        const loadedInventory = s.docs.map(d => ({ id: d.id, ...d.data() }) as InventoryItem);
-        setInventory(loadedInventory);
-
-        // Check hash for deep link gear
-        const hash = window.location.hash;
-        if (hash.includes('#gear=')) {
-          const qrCodeId = hash.split('#gear=')[1];
-          const matchedGear = loadedInventory.find(i => i.qrCodeId === qrCodeId);
-          if (matchedGear) {
-            if (matchedGear.category === 'Sound System') setCurrentView('inventory_sound');
-            else if (matchedGear.category === 'Multimedia') setCurrentView('inventory_media');
-            else if (matchedGear.category === 'Properti') setCurrentView('inventory_property');
-            setSelectedGearQR(matchedGear);
-          }
-        }
-      }),
+      onSnapshot(getColRef('inventory'), s => setInventory(s.docs.map(d => ({ id: d.id, ...d.data() }) as InventoryItem))),
       onSnapshot(getColRef('borrowings'), s => setBorrowings(s.docs.map(d => ({ id: d.id, ...d.data() }) as BorrowingRequest))),
       onSnapshot(getColRef('events'), s => setEvents(s.docs.map(d => ({ id: d.id, ...d.data() }) as EventItem))),
       onSnapshot(getColRef('songs'), s => setSongs(s.docs.map(d => ({ id: d.id, ...d.data() }) as Song))),
@@ -1404,7 +1335,13 @@ export default function App() {
   }, [user]);
 
   const handleAddDoc = async (colName: string, data: any) => { if (user) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', colName), data); };
-  const handleDeleteDoc = async (colName: string, docId: string) => { if (user) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', colName, docId)); };
+  const handleDeleteDoc = async (colName: string, docId: string) => { 
+    if (currentUserRole !== 'Super Admin') {
+      alert("Akses ditolak! Hanya Super Admin yang dapat menghapus data.");
+      return;
+    }
+    if (user) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', colName, docId)); 
+  };
   const handleUpdateDoc = async (colName: string, docId: string, data: any) => { if (user) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', colName, docId), data); };
 
   const dashboardStats = useMemo(() => {
@@ -1491,17 +1428,29 @@ export default function App() {
             </button>
           </div>
           <div className="flex items-center gap-4">
+            {/* Tombol Simulasi Ganti Role Super Admin */}
+            <button 
+              onClick={() => setCurrentUserRole(prev => prev === 'Super Admin' ? 'Anggota' : 'Super Admin')}
+              className={`text-xs px-3 py-1.5 rounded-lg font-bold border transition-all ${
+                currentUserRole === 'Super Admin' 
+                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30' 
+                  : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20'
+              }`}
+              title="Klik untuk simulasi ganti role"
+            >
+              Role: {currentUserRole}
+            </button>
+
             <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
               {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
             <Badge color="emerald">Online</Badge>
-            <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">AD</div>
           </div>
         </header>
 
         <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full flex-1 relative z-10">
           {currentView === 'dashboard' && <DashboardView stats={dashboardStats} events={events} onNavigate={setCurrentView} />}
-          {currentView === 'members' && <MembersView members={members} onAdd={(d: any) => handleAddDoc('members', d)} onDelete={(id: string) => handleDeleteDoc('members', id)} onUpdateXP={(id: string, newXp: number) => handleUpdateDoc('members', id, { xp: newXp })} />}
+          {currentView === 'members' && <MembersView members={members} onAdd={(d: any) => handleAddDoc('members', d)} onDelete={(id: string) => handleDeleteDoc('members', id)} onUpdateXP={(id: string, newXp: number) => handleUpdateDoc('members', id, { xp: newXp })} currentUserRole={currentUserRole} />}
           {currentView === 'finance' && <FinanceView transactions={transactions} stats={dashboardStats} onAdd={(d: any) => handleAddDoc('transactions', d)} />}
           
           {currentView === 'inventory_sound' && <InventoryView category="Sound System" items={inventory.filter(i => i.category === 'Sound System')} onAdd={(d: any) => handleAddDoc('inventory', d)} onDelete={(id: string) => handleDeleteDoc('inventory', id)} selectedGearQR={selectedGearQR} setSelectedGearQR={setSelectedGearQR} />}
