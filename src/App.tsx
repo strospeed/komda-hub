@@ -16,12 +16,11 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  setDoc,
 } from 'firebase/firestore';
 import {
   Users, DollarSign, Speaker, Camera, Armchair, Calendar as CalendarIcon,
   LayoutDashboard, Plus, Trash2, Menu, X, ArrowRightLeft, Trophy, MessageSquare, Send,
-  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, ExternalLink, Mail, PieChart, Printer, Image as ImageIcon, ChevronDown, ShieldAlert, LogOut, Lock, UserPlus, LogIn
+  QrCode, Download, Sun, Moon, Music, CalendarDays, Heart, ListTodo, ScanLine, Printer, Image as ImageIcon, ChevronDown, ShieldAlert, LogOut, UserPlus, LogIn, PieChart
 } from 'lucide-react';
 
 export const DISCORD_INVITE_URL = `https://discord.gg/GwXdWBTapD`;
@@ -32,6 +31,9 @@ export const CHURCH_IG_URL = 'https://www.instagram.com/komdagkjslogohimo/?hl=id
 export const CHURCH_TIKTOK_URL = 'https://www.tiktok.com/@komdagkjslogohimo';
 export const CHURCH_YT_URL = 'https://www.youtube.com/@GKJSLOGOHIMO';
 export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
+
+// Tuliskan email owner / admin utama di sini:
+const OWNER_EMAIL = 'mariodimasputra01@gmail.com'; // Ganti dengan email owner yang sebenarnya
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
 
@@ -139,12 +141,15 @@ const AuthView = ({ onAuthSuccess }: { onAuthSuccess: (user: User) => void }) =>
       if (isRegister) {
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
         
-        // Otomatis daftarkan akun baru ke database anggota dengan role "Anggota"
+        // Cek apakah email yang mendaftar adalah owner
+        const isOwner = email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
+
+        // Otomatis daftarkan akun baru ke koleksi members
         const memberRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
         await addDoc(memberRef, {
-          name: email.split('@')[0], // Menggunakan nama depan email sebagai nama awal
-          role: 'Anggota',
-          division: 'Youth',
+          name: email.split('@')[0],
+          role: isOwner ? 'Super Admin' : 'Anggota',
+          division: isOwner ? 'Pengurus Inti' : 'Youth',
           contact: email,
           joinDate: new Date().toISOString(),
           xp: 10,
@@ -1398,7 +1403,12 @@ export default function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [currentUserRole, setCurrentUserRole] = useState<'Super Admin' | 'Anggota'>('Super Admin');
+
+  // Menentukan role secara otomatis berdasarkan email yang login (Owner vs Anggota)
+  const currentUserRole = useMemo(() => {
+    if (!user || !user.email) return 'Anggota';
+    return user.email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase() ? 'Super Admin' : 'Anggota';
+  }, [user]);
 
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     utama: true,
@@ -1570,16 +1580,14 @@ export default function App() {
             </button>
           </div>
           <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setCurrentUserRole(prev => prev === 'Super Admin' ? 'Anggota' : 'Super Admin')}
-              className={`text-xs px-3 py-1.5 rounded-lg font-bold border transition-all ${
-                currentUserRole === 'Super Admin' 
-                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30' 
-                  : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20'
-              }`}
-            >
+            {/* Indikator Role otomatis berdasarkan email */}
+            <span className={`text-xs px-3 py-1.5 rounded-lg font-bold border ${
+              currentUserRole === 'Super Admin' 
+                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30' 
+                : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20'
+            }`}>
               Role: {currentUserRole}
-            </button>
+            </span>
 
             <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
               {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
