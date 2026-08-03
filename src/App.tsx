@@ -330,35 +330,60 @@ const DashboardView = ({ stats, events, onNavigate }: any) => {
           </Card>
       </div>
 
-      <Card onClick={() => onNavigate('finance')} className="border-indigo-500/30">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <PieChart className="w-6 h-6 text-indigo-500" />
-            <h3 className="font-bold text-slate-900 dark:text-white text-base">Diagram Arus Keuangan Kas</h3>
-          </div>
-          <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Klik untuk detail →</span>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-          <div className="space-y-3">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Pemasukan</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white">Rp {(stats?.income || 0).toLocaleString('id-ID')} ({incomePercent}%)</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card onClick={() => onNavigate('finance')} className="border-indigo-500/30 lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <PieChart className="w-6 h-6 text-indigo-500" />
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">Diagram Arus Keuangan Kas</h3>
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div> Pengeluaran</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white">Rp {(stats?.expense || 0).toLocaleString('id-ID')} ({expensePercent}%)</span>
-            </div>
+            <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Klik untuk detail →</span>
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Pemasukan</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">Rp {(stats?.income || 0).toLocaleString('id-ID')} ({incomePercent}%)</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div> Pengeluaran</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">Rp {(stats?.expense || 0).toLocaleString('id-ID')} ({expensePercent}%)</span>
+              </div>
+            </div>
 
-          <div className="md:col-span-2">
-            <div className="w-full bg-slate-100 dark:bg-slate-950 rounded-full h-4 overflow-hidden flex p-0.5 border border-slate-200 dark:border-slate-800">
-              <div className="bg-emerald-500 h-full rounded-l-full transition-all duration-500" style={{ width: `${incomePercent}%` }} title={`Pemasukan: ${incomePercent}%`}></div>
-              <div className="bg-rose-500 h-full rounded-r-full transition-all duration-500" style={{ width: `${expensePercent}%` }} title={`Pengeluaran: ${expensePercent}%`}></div>
+            <div className="md:col-span-2">
+              <div className="w-full bg-slate-100 dark:bg-slate-950 rounded-full h-4 overflow-hidden flex p-0.5 border border-slate-200 dark:border-slate-800">
+                <div className="bg-emerald-500 h-full rounded-l-full transition-all duration-500" style={{ width: `${incomePercent}%` }} title={`Pemasukan: ${incomePercent}%`}></div>
+                <div className="bg-rose-500 h-full rounded-r-full transition-all duration-500" style={{ width: `${expensePercent}%` }} title={`Pengeluaran: ${expensePercent}%`}></div>
+              </div>
             </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+
+        {/* Card Tautan Sosial Media & Website Resmi GKJ Slogohimo */}
+        <Card className="border-indigo-500/30 flex flex-col justify-between">
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-white text-base mb-3 flex items-center gap-2">
+              🌐 Tautan Resmi
+            </h3>
+            <div className="space-y-2 text-xs">
+              <a href={CHURCH_WEBSITE_URL} target="_blank" rel="noreferrer" className="block p-2 rounded-lg bg-slate-50 dark:bg-slate-950 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-semibold transition-colors truncate">
+                🌍 Website: {CHURCH_WEBSITE_URL}
+              </a>
+              <a href={DISCORD_INVITE_URL} target="_blank" rel="noreferrer" className="block p-2 rounded-lg bg-slate-50 dark:bg-slate-950 hover:bg-[#5865F2]/10 text-[#5865F2] font-semibold transition-colors truncate">
+                💬 Komunitas Discord
+              </a>
+              <a href={CHURCH_IG_URL} target="_blank" rel="noreferrer" className="block p-2 rounded-lg bg-slate-50 dark:bg-slate-950 hover:bg-rose-500/10 text-rose-500 font-semibold transition-colors truncate">
+                📸 Instagram KOMDA
+              </a>
+              <a href={CHURCH_YT_URL} target="_blank" rel="noreferrer" className="block p-2 rounded-lg bg-slate-50 dark:bg-slate-950 hover:bg-red-500/10 text-red-500 font-semibold transition-colors truncate">
+                📺 YouTube Channel
+              </a>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };
