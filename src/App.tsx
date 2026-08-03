@@ -1,11 +1,4 @@
-// ... existing code ...
-import {
-  getFirestore,
-  collection,
-  onSnapshot,
-  addDoc,
-  setDoc,
-  deleteDoc,import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -40,7 +33,7 @@ export const CHURCH_TIKTOK_URL = 'https://www.tiktok.com/@komdagkjslogohimo';
 export const CHURCH_YT_URL = 'https://www.youtube.com/@GKJSLOGOHIMO';
 export const PERMANENT_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1532677061397844089/hHMk-YY4pzLD8Z_WUu_hwMETVUTq0klvbgCv-RPVuMapx_jzs5642I61YfG-PnGbMm65';
 
-const OWNER_EMAIL = 'mariodimasputra01@gmail.com'; 
+const OWNER_EMAIL = 'admin@gkjslogohimo.web.id'; 
 
 const LOGO_URL = "https://scontent.cdninstagram.com/v/t51.82787-19/670185764_18404537299198608_3466022258141293919_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=fT8-QoF7sGAQ7kNvwG0YQl8&_nc_oc=AdriMEhEnYQIPNWxsshVgq4awx68DrA7n_3KkfQFiP0zhIhNCEfLmo2s5-U-E-Ye6cw&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_gid=stV9ZRyT4yRV4ZTzPFPOrg&_nc_ss=7b6a8&oh=00_AQHN3R0HJWbuIvSDRWDJ2WbmT8UNXJQY__b5tuHSxuvyjw&oe=6A751827";
 
@@ -74,7 +67,6 @@ export interface Rota { id: string; date: string; event: string; wl: string; mus
 export interface Prayer { id: string; author: string; content: string; date: string; prayCount: number; }
 export interface Task { id: string; title: string; assignee: string; status: 'To Do' | 'In Progress' | 'Done'; event: string; }
 
-// --- FUNGSI KOMPRESI GAMBAR (Pengganti Storage) ---
 const compressImage = (file: File, maxWidth = 250, quality = 0.6): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -104,7 +96,6 @@ const compressImage = (file: File, maxWidth = 250, quality = 0.6): Promise<strin
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
         
-        // Kompresi ke jpeg
         const dataUrl = canvas.toDataURL('image/jpeg', quality);
         resolve(dataUrl);
       };
@@ -113,7 +104,6 @@ const compressImage = (file: File, maxWidth = 250, quality = 0.6): Promise<strin
     reader.onerror = (error) => reject(error);
   });
 };
-// ---------------------------------------------------
 
 const Card = ({ children, className = '', onClick }: any) => (
   <div onClick={onClick} className={`bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl transition-all duration-300 ${onClick ? 'cursor-pointer hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1' : ''} ${className}`}>
@@ -1954,213 +1944,3 @@ export default function App() {
     </div>
   );
 }
-  doc,
-  updateDoc
-} from 'firebase/firestore';
-
-// HAPUS IMPORT FIREBASE STORAGE KARENA TIDAK BISA DIGUNAKAN DI PLAN SPARK
-// import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
-import {
-// ... existing code ...
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-// Hapus inisialisasi storage
-// const storage = getStorage(app);
-const appId = 'komda-hub-main';
-
-export type View = 'dashboard' | 'members' | 'finance' | 'inventory_sound' | 'inventory_media' | 'inventory_property' | 'borrowing' | 'calendar' | 'discord_webhook' | 'songs' | 'rota' | 'prayers' | 'tasks' | 'profile';
-// ... existing code ...
-
-// --- FUNGSI HELPER UNTUK KOMPRESI GAMBAR ---
-const compressImage = (file: File, maxWidth = 300, maxHeight = 300, quality = 0.7): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
-          }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        // Menghasilkan base64 yang sudah dikompres
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = (error) => reject(error);
-    };
-    reader.onerror = (error) => reject(error);
-  });
-};
-
-
-const ProfileView = ({ user, members, onSaveProfile }: any) => {
-// ... existing code ...
-  const [formData, setFormData] = useState({
-    name: currentMember?.name || user?.email?.split('@')[0] || '',
-    division: currentMember?.division || (user?.email?.trim().toLowerCase() === OWNER_EMAIL.toLowerCase() ? 'Pengurus Inti' : 'Youth'),
-    contact: currentMember?.contact || user?.email || '',
-    photoUrl: currentMember?.photoUrl || ''
-  });
-  const [successMsg, setSuccessMsg] = useState('');
-  
-  // Hapus state selectedFile dan isUploading untuk storage
-  const [isCompressing, setIsCompressing] = useState(false);
-
-  useEffect(() => {
-    if (currentMember) {
-// ... existing code ...
-        photoUrl: currentMember.photoUrl || ''
-      });
-    }
-  }, [currentMember, user]);
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setIsCompressing(true);
-      try {
-        // Kompres gambar menjadi sangat kecil agar aman di Firestore (maks 1MB)
-        const compressedBase64 = await compressImage(file, 250, 250, 0.6);
-        setFormData(prev => ({ ...prev, photoUrl: compressedBase64 }));
-      } catch (error) {
-        console.error("Gagal mengkompres gambar:", error);
-        alert("Gagal memproses gambar. Coba gambar lain.");
-      } finally {
-        setIsCompressing(false);
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    setSuccessMsg('');
-
-    try {
-      // Langsung simpan ke Firestore menggunakan base64 yang sudah dikompresi
-      const isOwner = user.email?.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
-      const payload = {
-        name: formData.name.trim() || user.email?.split('@')[0] || 'User',
-        role: currentMember?.role || (isOwner ? 'Super Admin' : 'Anggota'),
-        division: formData.division,
-        contact: (formData.contact || user.email || '').toLowerCase(),
-        joinDate: currentMember?.joinDate || new Date().toISOString(),
-        xp: currentMember?.xp ?? 10,
-        qrId: currentMember?.qrId || `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`,
-        photoUrl: formData.photoUrl // Ini sekarang berisi base64 kecil
-      };
-
-      const targetId = currentMember ? currentMember.id : user.uid;
-      await onSaveProfile(targetId, payload);
-      setSuccessMsg('Profil dan foto berhasil disimpan serta tersinkronisasi!');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } catch (error) {
-      console.error(error);
-      alert("Gagal menyimpan profil.");
-    }
-  };
-
-  return (
-// ... existing code ...
-          {successMsg && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs rounded-xl font-semibold text-center">
-              {successMsg}
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="submit" disabled={isCompressing}>
-              <Save className="w-4 h-4" /> {isCompressing ? 'Memproses Gambar...' : 'Simpan Perubahan Profil'}
-            </Button>
-          </div>
-        </form>
-      </Card>
-    </div>
-// ... existing code ...
-  const isSuperAdmin = currentUserRole === 'Super Admin';
-  
-  // Hapus state storage
-  const [isCompressing, setIsCompressing] = useState(false);
-
-  useEffect(() => {
-    if (!isScanning) return;
-// ... existing code ...
-      };
-    }
-  }, [isScanning, members, onUpdateXP]);
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setIsCompressing(true);
-      try {
-        const compressedBase64 = await compressImage(file, 200, 200, 0.6);
-        setFormData(prev => ({ ...prev, photoUrl: compressedBase64 }));
-      } catch (error) {
-        console.error("Kompresi error:", error);
-      } finally {
-        setIsCompressing(false);
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isSuperAdmin) {
-      alert("Akses ditolak! Hanya Super Admin yang dapat menambah anggota / mengatur hak akses.");
-      return;
-    }
-    
-    try {
-      const qrId = `MEMBER-${Math.floor(100000 + Math.random() * 900000)}`;
-      
-      // onAdd akan memanggil addDoc ke firestore
-      await onAdd({ ...formData, joinDate: new Date().toISOString(), xp: Number(formData.xp) || 0, qrId });
-      
-      setIsAdding(false);
-      setFormData({ name: '', role: 'Anggota', division: 'Youth', contact: '', xp: 50, photoUrl: '' });
-    } catch (err) {
-      console.error(err);
-      alert("Gagal menyimpan anggota.");
-    }
-  };
-
-  const handleOpenEdit = (member: Member) => {
-// ... existing code ...
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Foto Profil</label>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-                    {formData.photoUrl ? <img src={formData.photoUrl} alt="Preview" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-slate-400" />}
-                  </div>
-                  <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isCompressing} className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-500/10 dark:file:text-indigo-400 hover:file:bg-indigo-100 transition-all cursor-pointer" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-              <Button variant="ghost" type="button" onClick={() => setIsAdding(false)}>Batal</Button>
-              <Button type="submit" disabled={isCompressing}>{isCompressing ? 'Memproses...' : 'Simpan Anggota'}</Button>
-            </div>
-          </form>
-        </Card>
-// ... existing code ...
